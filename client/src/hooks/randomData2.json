@@ -1,0 +1,59 @@
+{
+  "maintopicname": "Mechanics",
+  "subtopics": [
+    {
+      "subtopicname": "Kinematics",
+      "questions": [
+        {
+          "questionId": "456",
+          "question": "What is the velocity of an object after 10 seconds if it starts from rest and accelerates at 2 m/s²?",
+          "answer": "20 m/s",
+          "options": [
+            "10 m/s",
+            "20 m/s",
+            "30 m/s",
+            "40 m/s"
+          ]
+        },
+        {
+          "questionId": "967",
+          "question": "What is the displacement of an object moving at constant velocity of 5 m/s for 3 seconds?",
+          "answer": "15 m",
+          "options": [
+            "10 m",
+            "15 m",
+            "20 m",
+            "25 m"
+          ]
+        }
+      ]
+    },
+    {
+      "subtopicname": "Newton's Laws",
+      "questions": [
+        {
+          "questionId": "465154",
+          "question": "What is the force required to accelerate a 5 kg object at 2 m/s²?",
+          "answer": "10 N",
+          "options": [
+            "5 N",
+            "10 N",
+            "15 N",
+            "20 N"
+          ]
+        },
+        {
+          "questionId": "34162647",
+          "question": "If an object has a mass of 10 kg and is experiencing a force of 30 N, what is its acceleration?",
+          "answer": "3 m/s²",
+          "options": [
+            "1 m/s²",
+            "2 m/s²",
+            "3 m/s²",
+            "4 m/s²"
+          ]
+        }
+      ]
+    }
+  ]
+}
