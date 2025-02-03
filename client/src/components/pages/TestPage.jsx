@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {Loader2} from "lucide-react";
 import {useDispatch, useSelector} from "react-redux";
-import {setTest, updateAnswer} from "@/features/test/testSlice.js";
+import {removeAnswer, setTest, updateAnswer} from "@/features/test/testSlice.js";
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.jsx";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import {Label} from "@/components/ui/label.jsx";
@@ -14,13 +14,12 @@ function TestPage() {
     const test = useSelector((state) => state.test.testData);
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const [currentIndex, setCurrentIndex] = useState(localStorage.getItem('currentIndex') || 0);
-    localStorage.setItem("currentIndex", currentIndex)
+    const [currentIndex, setCurrentIndex] = useState(Number(localStorage.getItem('currentIndex')) || 0);
+    localStorage.setItem("currentIndex", parseInt(currentIndex, 10))
     const [timeLeft, setTimeLeft] = useState(() => {
         return JSON.parse(localStorage.getItem("timer")) || test.remainingTime;
     });
     const [selectedOption, setSelectedOption] = useState(null);
-
     const hours = Math.floor(timeLeft / 3600);
     const minutes = Math.floor((timeLeft % 3600) / 60);
     const seconds = timeLeft % 60;
@@ -97,6 +96,26 @@ function TestPage() {
             console.error("Error updating answer:", error);
         }
     };
+    const handleRemoveAnswerSelect = async () => {
+        setSelectedOption(null);
+        dispatch(removeAnswer({index: currentIndex}));
+
+        try {
+            await fetch(`${import.meta.env.VITE_SERVER}/test/${testId}/answer`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    questionIndex: currentIndex,
+                    selectedAnswer: null,
+                }),
+            });
+        } catch (error) {
+            console.error("Error updating answer:", error);
+        }
+    };
+
 
     const handleSubmit = async () => {
         await fetch(`${import.meta.env.VITE_SERVER}/test/submit/${testId}`, {
@@ -126,7 +145,7 @@ function TestPage() {
     return (
         <div>
             <Card className="w-[80vw] h-[80vh] mx-auto flex flex-col">
-                <CardHeader className={`flex justify-center`}>
+                <CardHeader className={`flex flex-row justify-between`}>
                     <h2 className={`text-3xl text-start font-semibold mb-12 `}>
                         {hours < 10 ? `0${hours}` : hours}:
                         {minutes < 10 ? `0${minutes}` : minutes}:
@@ -135,6 +154,9 @@ function TestPage() {
                     <CardTitle className="text-4xl font-bold text-center">
                         {test.subtopicname}
                     </CardTitle>
+                    <div className="mt-4 text-sm text-gray-500">
+                    Savol {+currentIndex + 1}/{test.questions.length}
+                    </div>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col justify-center px-8 py-6">
                     <div className="mb-6">
@@ -156,6 +178,7 @@ function TestPage() {
                                     </div>
                                 ))
                                 : "test yoq"}
+                            <Button variant={"outline"} className={`w-fit `} onClick={handleRemoveAnswerSelect}>Belgilanganlarni o'chirish</Button>
                         </RadioGroup>
                     </div>
                 </CardContent>
@@ -168,13 +191,16 @@ function TestPage() {
                                 disabled={(test.questions.length - 1) === currentIndex}>
                             Keyingisi
                         </Button>
-                        <Button size={`lg`} onClick={handleSubmit}
-                                >
-                            Topshirish
-                        </Button>
 
+                        {
+                            (test.questions.length - 1) === currentIndex && <Button size={`lg`} onClick={handleSubmit}
+                            >
+                                Topshirish
+                            </Button>
+                        }
                     </div>
                 </CardFooter>
+
             </Card>
         </div>
     );

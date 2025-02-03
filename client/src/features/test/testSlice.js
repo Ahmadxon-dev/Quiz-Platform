@@ -28,6 +28,12 @@ const testSlice = createSlice({
                 state.testData.questions[index].selectedAnswer = answer
             }
         },
+        removeAnswer: (state, action) =>{
+            const {index} = action.payload
+            if (state.testData){
+                state.testData.questions[index].selectedAnswer = null
+            }
+        },
         setTime: (state, action)=>{
             if (state.testData){
                 state.testData.remainingTime = action.payload
@@ -35,5 +41,5 @@ const testSlice = createSlice({
         }
     }
 })
-export const {setTest, updateAnswer, setTime} = testSlice.actions
+export const {setTest, updateAnswer,removeAnswer, setTime} = testSlice.actions
 export default testSlice.reducer
