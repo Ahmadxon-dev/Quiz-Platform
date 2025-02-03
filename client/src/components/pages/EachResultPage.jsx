@@ -111,7 +111,7 @@ function EachResultPage(props) {
                             </ul>
                             <div className="mt-4 space-y-2">
                                 <p className="font-semibold flex items-center">
-                                    <span className="mr-2">Selected Answer:</span>
+                                    <span className="mr-2">Belgilangan javob:</span>
                                     {question.selectedAnswer ? (
                                         <span className={question.selectedAnswer === question.answer ? "text-green-500" : "text-red-500"}>
                       {question.selectedAnswer}
@@ -119,12 +119,12 @@ function EachResultPage(props) {
                                     ) : (
                                         <span className="text-yellow-500 flex items-center">
                       <MinusCircle className="inline-block mr-1" size={20} />
-                      No answer selected
+                      Javob tanlanmagan
                     </span>
                                     )}
                                 </p>
                                 <p className="font-semibold flex items-center">
-                                    <span className="mr-2">Correct Answer:</span>
+                                    <span className="mr-2">To'g'ri javob:</span>
                                     <span className="text-green-500">{question.answer}</span>
                                 </p>
                             </div>
