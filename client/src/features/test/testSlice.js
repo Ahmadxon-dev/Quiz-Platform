@@ -2,7 +2,7 @@ import {createSlice} from "@reduxjs/toolkit";
 
 const initialState = {
     testData: {
-        subtopicname: null,
+        subtopicname: [],
         questions: [{
             questionId:null,
             question:null,

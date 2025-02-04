@@ -2,6 +2,7 @@ const {Router} = require('express')
 const router = Router()
 const Test = require("../models/Test")
 const TopicAndQuestion = require("../models/TopicAndQuestion")
+const {all} = require("express/lib/application");
 //start
 
 router.get("/getfulltestdb", async (req,res)=>{
@@ -9,32 +10,57 @@ router.get("/getfulltestdb", async (req,res)=>{
     return res.json(data)
 })
 router.post("/start", async (req,res)=>{
-    const {time, subtopicname, userEmail} = req.body
-    const topic = await TopicAndQuestion.findOne({"subtopics.subtopicname": subtopicname,});
-    if (!topic) {
-        return res.status(404).json({ error: "Subtopic not found" });
+    const {time, subtopicnamesArray, userEmail} = req.body
+    const topic = await TopicAndQuestion.findOne({
+        "subtopics.subtopicname": { $in: subtopicnamesArray },
+    });
+    if (!topic){
+        return res.status(400).json({error: "Subtopic not found"})
     }
-    const subtopic = topic.subtopics.find(st=>st.subtopicname===subtopicname)
-    if (!subtopic) {
-        return res.status(404).json({ error: "Subtopic not found" });
-    }
-    const questions = subtopic.questions.map((q) => ({
-        questionId: q.questionId, // Random question ID
-        question: q.question,
-        options: q.options,
-        selectedAnswer:null,
-        answer: q.answer, // Keep the correct answer for evaluation (optional)
-    }));
+    // return res.json(topic)
+    let allQuestions = []
+    topic.subtopics?.forEach(subtopic=>{
+        subtopic.questions.forEach(question=>allQuestions.push(question))
+    })
+    // return res.json(allQuestions)
     const newTest = new Test({
-        subtopicname,
-        questions,
+        subtopicname: subtopicnamesArray,
+        questions:allQuestions,
         startTime: new Date(),
         remainingTime: time, // Example: 1 hour
         isCompleted: false,
         userEmail,
-    });
+    })
+    // return res.json(newTest)
     await newTest.save()
     return res.status(200).json({msg:"test created", testId:newTest._id, newTest})
+
+
+    // const topic = await TopicAndQuestion.findOne({"subtopics.subtopicname": subtopicname,});
+    // if (!topic) {
+    //     return res.status(404).json({ error: "Subtopic not found" });
+    // }
+    // const subtopic = topic.subtopics.find(st=>st.subtopicname===subtopicname)
+    // if (!subtopic) {
+    //     return res.status(404).json({ error: "Subtopic not found" });
+    // }
+    // const questions = subtopic.questions.map((q) => ({
+    //     questionId: q.questionId, // Random question ID
+    //     question: q.question,
+    //     options: q.options,
+    //     selectedAnswer:null,
+    //     answer: q.answer, // Keep the correct answer for evaluation (optional)
+    // }));
+    // const newTest = new Test({
+    //     subtopicname,
+    //     questions,
+    //     startTime: new Date(),
+    //     remainingTime: time, // Example: 1 hour
+    //     isCompleted: false,
+    //     userEmail,
+    // });
+    // await newTest.save()
+
 })
 
 router.get("/:testId", async (req,res)=>{

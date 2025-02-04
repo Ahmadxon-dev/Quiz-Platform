@@ -152,7 +152,10 @@ function TestPage() {
                         {seconds < 10 ? `0${seconds}` : seconds}
                     </h2>
                     <CardTitle className="text-4xl font-bold text-center">
-                        {test.subtopicname}
+                        {/*{test.subtopicname.forEach(subtopic=>{*/}
+                        {/*    return subtopic*/}
+                        {/*})}*/}
+                        Subtopic name
                     </CardTitle>
                     <div className="mt-4 text-sm text-gray-500">
                     Savol {+currentIndex + 1}/{test.questions.length}

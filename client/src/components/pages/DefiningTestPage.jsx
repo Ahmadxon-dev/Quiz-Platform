@@ -13,131 +13,12 @@ import {Input} from "@/components/ui/input.jsx";
 import {Loader2} from "lucide-react";
 import {useDispatch, useSelector} from "react-redux";
 import {setTest} from "@/features/test/testSlice.js";
+import {Checkbox} from "@/components/ui/checkbox.jsx";
 
-// const topicsData = [
-//     {
-//         "maintopicname": "Electromagnetism",
-//         "subtopics": [
-//             {
-//                 "subtopicname": "Electric Circuits",
-//                 "questions": [
-//                     {
-//                         "questionId": "8923466156465",
-//                         "question": "What is the current through a 2 ohm resistor when a 10 V potential difference is applied across it?",
-//                         "answer": "5 A",
-//                         "options": [
-//                             "2 A",
-//                             "5 A",
-//                             "7 A",
-//                             "10 A"
-//                         ]
-//                     },
-//                     {
-//                         "questionId": "313565487979",
-//                         "question": "If a circuit has a total resistance of 10 ohms and a voltage of 20 V, what is the current?",
-//                         "answer": "2 A",
-//                         "options": [
-//                             "0.5 A",
-//                             "1 A",
-//                             "2 A",
-//                             "4 A"
-//                         ]
-//                     }
-//                 ]
-//             },
-//             {
-//                 "subtopicname": "Magnetic Fields",
-//                 "questions": [
-//                     {
-//                         "questionId": "2146245124412445",
-//                         "question": "What is the direction of the magnetic field around a current-carrying wire?",
-//                         "answer": "It forms concentric circles around the wire.",
-//                         "options": [
-//                             "In straight lines",
-//                             "In concentric circles",
-//                             "Along the wire",
-//                             "Perpendicular to the wire"
-//                         ]
-//                     },
-//                     {
-//                         "questionId": "212313497946464",
-//                         "question": "What is the force on a charged particle moving in a magnetic field?",
-//                         "answer": "It depends on the charge, speed, and angle of the particle relative to the field.",
-//                         "options": [
-//                             "It depends on the charge only",
-//                             "It depends on the charge and speed only",
-//                             "It depends on the charge, speed, and angle",
-//                             "It is always zero"
-//                         ]
-//                     }
-//                 ]
-//             }
-//         ]
-//     },
-//     {
-//         "maintopicname": "Mechanics",
-//         "subtopics": [
-//             {
-//                 "subtopicname": "Kinematics",
-//                 "questions": [
-//                     {
-//                         "questionId": "456",
-//                         "question": "What is the velocity of an object after 10 seconds if it starts from rest and accelerates at 2 m/s²?",
-//                         "answer": "20 m/s",
-//                         "options": [
-//                             "10 m/s",
-//                             "20 m/s",
-//                             "30 m/s",
-//                             "40 m/s"
-//                         ]
-//                     },
-//                     {
-//                         "questionId": "967",
-//                         "question": "What is the displacement of an object moving at constant velocity of 5 m/s for 3 seconds?",
-//                         "answer": "15 m",
-//                         "options": [
-//                             "10 m",
-//                             "15 m",
-//                             "20 m",
-//                             "25 m"
-//                         ]
-//                     }
-//                 ]
-//             },
-//             {
-//                 "subtopicname": "Newton's Laws",
-//                 "questions": [
-//                     {
-//                         "questionId": "465154",
-//                         "question": "What is the force required to accelerate a 5 kg object at 2 m/s²?",
-//                         "answer": "10 N",
-//                         "options": [
-//                             "5 N",
-//                             "10 N",
-//                             "15 N",
-//                             "20 N"
-//                         ]
-//                     },
-//                     {
-//                         "questionId": "34162647",
-//                         "question": "If an object has a mass of 10 kg and is experiencing a force of 30 N, what is its acceleration?",
-//                         "answer": "3 m/s²",
-//                         "options": [
-//                             "1 m/s²",
-//                             "2 m/s²",
-//                             "3 m/s²",
-//                             "4 m/s²"
-//                         ]
-//                     }
-//                 ]
-//             }
-//         ]
-//     }
-// ];
 
 function DefiningTestPage(props) {
     const [selectedMaintopic, setSelectedMaintopic] = useState('');
-    const [selectedSubtopic, setSelectedSubtopic] = useState('');
+    const [selectedSubtopics, setSelectedSubtopics] = useState([]);
     const [loadingforBtn, setLoadingforBtn] = useState(false)
     const [topicsData, setTopicsData] = useState([])
     const [loading, setLoading] = useState(true)
@@ -148,14 +29,18 @@ function DefiningTestPage(props) {
     const subtopics = selectedTopicData ? selectedTopicData.subtopics : [];
     const [time, setTime] = useState({ soat: "00", daqiqa: "00", soniya: "00" })
     let timeSeconds =+time.soat*60*60+ +time.daqiqa*60+ +time.soniya
-    console.log(timeSeconds)
+    let selectedSubTopicNames = []
+    selectedSubtopics.forEach(subtopic=>{
+        selectedSubTopicNames.push(subtopic.subtopicname)
+    })
+    console.log(selectedSubTopicNames)
     const getFullDb = async ()=>{
         await fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
             .then(res=>res.json())
             .then(data=>{
                 setLoading(false)
                 setTopicsData(data)
-                console.log(`questions are here`)
+                console.log(data)
             })
     }
     useEffect(()=>{
@@ -173,7 +58,6 @@ function DefiningTestPage(props) {
     }
     const handleStart =async ()=>{
         let timeSeconds =+time.soat*60*60+ +time.daqiqa*60+ +time.soniya
-        console.log(timeSeconds)
         setLoadingforBtn(true)
         await fetch(`${import.meta.env.VITE_SERVER}/test/start`, {
             method:"post",
@@ -182,7 +66,7 @@ function DefiningTestPage(props) {
             },
             body: JSON.stringify({
                 time:timeSeconds,
-                subtopicname:selectedSubtopic, //selected subtopic with questions,
+                subtopicnamesArray:selectedSubTopicNames, //selected subtopic with questions,
                 userEmail:user.email,
             })
         })
@@ -192,6 +76,9 @@ function DefiningTestPage(props) {
                 dispatch(setTest(data.newTest))
                 navigate(`/test/${data.testId}`)
             })
+    }
+    const handleItemToggle = (item) => {
+        setSelectedSubtopics((prev) => (prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]))
     }
 
     if (loading){
@@ -211,7 +98,7 @@ function DefiningTestPage(props) {
                     {/*onSelect={(event)=>event.preventDefault()}*/}
                     <Select className={`z-50`} id="maintopic"  value={selectedMaintopic}  onValueChange={(value) => {
                         setSelectedMaintopic(value);
-                        setSelectedSubtopic('');
+                        setSelectedSubtopics([]);
                     }}>
                         <SelectTrigger className="min-w-full outline-none">
                             <SelectValue placeholder="Bo'limlar"/>
@@ -224,24 +111,46 @@ function DefiningTestPage(props) {
                     </Select>
                 </div>
 
-                {/*{selectedMaintopic && (*/}
-                    <div className={`mb-3`}>
-                        <Label htmlFor="subtopic" >Mavzuni tanlang </Label>
-                        <Select  id="subtopic" value={selectedSubtopic} onValueChange={(value) => {
-                            setSelectedSubtopic(value);
-                        }}>
-                            <SelectTrigger className="w-full outline-none">
-                                <SelectValue placeholder="Mavzular"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {subtopics.map((subtopic) => (
-                                    <SelectItem key={subtopic.subtopicname}
-                                                value={subtopic.subtopicname}>{subtopic.subtopicname}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                {selectedMaintopic && (
+                    <div className="space-y-2">
+                        <Label>Mavzularni tanlang</Label>
+                        {
+                            subtopics.map(subtopic =>(
+                                <div key={subtopic.subtopicname} className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id={subtopic.subtopicname}
+                                        checked={selectedSubtopics.includes(subtopic)}
+                                        onCheckedChange={() => handleItemToggle(subtopic)}
+                                    />
+                                    <label
+                                        htmlFor={subtopic.subtopicname}
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    >
+                                        {subtopic.subtopicname}
+                                    </label>
+                                </div>
+                            ))
+                        }
+
+
                     </div>
-                {/*)}*/}
+                    // <div className={`mb-3`}>
+                    //     <Label htmlFor="subtopic" >Mavzuni tanlang </Label>
+                    //     <Select  id="subtopic" value={selectedSubtopic} onValueChange={(value) => {
+                    //         setSelectedSubtopic(value);
+                    //     }}>
+                    //         <SelectTrigger className="w-full outline-none">
+                    //             <SelectValue placeholder="Mavzular"/>
+                    //         </SelectTrigger>
+                    //         <SelectContent>
+                    //             {subtopics.map((subtopic) => (
+                    //                 <SelectItem key={subtopic.subtopicname}
+                    //                             value={subtopic.subtopicname}>{subtopic.subtopicname}</SelectItem>
+                    //             ))}
+                    //         </SelectContent>
+                    //     </Select>
+                    // </div>
+                )}
                 <div className="mb-3 grid grid-cols-3 gap-4">
                     {(["soat", "daqiqa", "soniya"]).map((unit) => (
                         <div key={unit} className="space-y-2">

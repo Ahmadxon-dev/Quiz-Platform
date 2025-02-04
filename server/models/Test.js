@@ -1,7 +1,7 @@
 const {Schema, model} = require("mongoose");
 
 const TestSchema = new Schema({
-    subtopicname:{type:String, required:true},
+    subtopicname:[{type:String, required:true}],
     questions: [{ questionId: {type: Schema.ObjectId}, question:String, selectedAnswer: String, options:[String], answer:String }],
     startTime: Date,
     remainingTime: Number, //  time in seconds
