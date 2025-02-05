@@ -78,7 +78,7 @@ function ResultsPage(props) {
                                         <TableRow>
                                             <TableHead>Mavzu</TableHead>
                                             <TableHead>Savollar</TableHead>
-                                            <TableHead>Correct</TableHead>
+                                            <TableHead>To'g'ri javoblar</TableHead>
                                             <TableHead>Ball</TableHead>
                                             <TableHead>Ketgan vaqt</TableHead>
                                             <TableHead>Sana</TableHead>
