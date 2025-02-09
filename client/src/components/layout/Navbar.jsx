@@ -30,13 +30,24 @@ function Navbar(props) {
         {
             path: '/definetest',
             label: 'Test Yechish',
-            roles: ['user', 'admin'],
+            roles: ['user', 'admin', 'bosh admin'],
         },
         {
             path: '/results',
             label: 'Natijalar',
-            roles: ['user'],
+            roles: ['user', 'admin', 'bosh admin'],
         },
+        {
+            path: '/users',
+            label: 'Foydalanuvchilar',
+            roles: ['admin', "bosh admin"],
+        },
+        {
+            path: '/testtopdf',
+            label: 'Test-PDF',
+            roles: ['admin', "bosh admin"],
+        }
+
         // {
         //     path: '/results',
         //     label: 'View Results',
@@ -106,10 +117,10 @@ function Navbar(props) {
                             </SheetTrigger>
                             <SheetContent side="right" className="w-[300px] sm:hidden pt-10">
                                 <nav className="flex flex-col gap-4">
-                                    {links.map((link, index) => (
+                                    {filteredLinks.map((link, index) => (
                                         <Link
                                             key={index}
-                                            to={link.href}
+                                            to={link.path}
                                             className={cn(
                                                 "px-4 py-3 rounded-md text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                                             )}

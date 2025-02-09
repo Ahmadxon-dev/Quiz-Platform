@@ -21,7 +21,7 @@ function ResultsPage(props) {
     const user = useSelector(state => state.user)
     const [loading, setLoading] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 4
+    const itemsPerPage = 6
     const totalPages =!loading && Math.ceil(data.length / itemsPerPage)
     const paginatedData =!loading && data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
@@ -62,7 +62,8 @@ function ResultsPage(props) {
         );
     }
     return (
-        <>
+        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
             <Card className="w-full max-w-5xl mx-auto my-8">
                 <CardHeader>
                     <CardTitle className="text-2xl font-bold text-center">Test Natijalari</CardTitle>
@@ -184,8 +185,8 @@ function ResultsPage(props) {
             {/*)*/}
             {/*}*/}
 
-
-        </>
+            </div>
+        </div>
     );
 }
 

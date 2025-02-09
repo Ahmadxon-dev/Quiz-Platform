@@ -113,7 +113,7 @@ router.put("/:testId/answer", async (req,res)=>{
 
 router.get("/results/:userEmail", async (req,res)=>{
     const {userEmail} = req.params
-    const test = await Test.find({userEmail})
+    const test = await Test.find({userEmail}).sort({ _id: -1 })
     return res.json(test)
 })
 

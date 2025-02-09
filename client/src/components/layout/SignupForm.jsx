@@ -60,7 +60,9 @@ function SignupForm(props) {
     }
 
     return (
-        <div className={cn("flex flex-col gap-6 justify-center mx-auto h-[80vh] w-3/12")}>
+        // <div className={cn("flex flex-col gap-6 justify-center mx-auto h-[80vh] w-3/12")}>
+        <div className="min-h-screen  bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 ">
+            <div className="max-w-lg mx-auto ">
             <Card>
                 <CardHeader>
                     <CardTitle className="text-2xl">Ro'yxatdan o'tish</CardTitle>
@@ -76,6 +78,7 @@ function SignupForm(props) {
                                 <Input
                                     id="name"
                                     type={"name"}
+                                    placeholder={"Ismingizni kiriting"}
                                     value={name}
                                     onChange={e => setName(e.target.value)}
                                     required
@@ -99,6 +102,7 @@ function SignupForm(props) {
                                 <Input id="password"
                                        type="password"
                                        value={password}
+                                       placeholder={"********"}
                                        onChange={e => setPassword(e.target.value)}
                                        required
                                 />
@@ -116,6 +120,7 @@ function SignupForm(props) {
                     </form>
                 </CardContent>
             </Card>
+        </div>
         </div>
     );
 }

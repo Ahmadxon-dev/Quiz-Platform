@@ -143,7 +143,8 @@ function TestPage() {
     }
 
     return (
-        <div>
+            <div className=" bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+                <div className=" mx-auto">
             <Card className="w-[80vw] h-[80vh] mx-auto flex flex-col">
                 <CardHeader className={`flex flex-row justify-between`}>
                     <h2 className={`text-3xl text-start font-semibold mb-12 `}>
@@ -206,6 +207,7 @@ function TestPage() {
 
             </Card>
         </div>
+            </div>
     );
 }
 

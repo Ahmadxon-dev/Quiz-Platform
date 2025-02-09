@@ -67,7 +67,7 @@ function EachResultPage(props) {
                         className={`border-l-4 ${
                             question.selectedAnswer === question.answer
                                 ? "border-green-500"
-                                : question.selectedAnswer === null
+                                : (question.selectedAnswer === undefined || null)
                                     ? "border-yellow-500"
                                     : "border-red-500"
                         }`}
@@ -78,7 +78,7 @@ function EachResultPage(props) {
                     className={`text-white rounded-full w-8 h-8 flex items-center justify-center mr-2 flex-shrink-0 ${
                         question.selectedAnswer === question.answer
                             ? "bg-green-500"
-                            : question.selectedAnswer === null
+                            : (question.selectedAnswer === undefined || null)
                                 ? "bg-yellow-500"
                                 : "bg-red-500"
                     }`}

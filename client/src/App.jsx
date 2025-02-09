@@ -11,6 +11,8 @@ import DefiningTestPage from "@/components/pages/DefiningTestPage.jsx";
 import TestPage from "@/components/pages/TestPage.jsx";
 import ResultsPage from "@/components/pages/ResultsPage.jsx";
 import EachResultPage from "@/components/pages/EachResultPage.jsx";
+import UsersPage from "@/components/pages/UsersPage.jsx";
+import TestToPdf from "@/components/pages/TestToPdf.jsx";
 
 
 function App() {
@@ -53,6 +55,8 @@ function App() {
             <Route path={"/signin"} element={<LoginForm/>} />
             <Route path={"/results"} element={<ResultsPage />} />
             <Route path={"/results/:testId"} element={<EachResultPage />} />
+            <Route path={"/users"} element={<UsersPage />} />
+            <Route path={`/testtopdf`} element={<TestToPdf />} />
         </Routes>
     </>
   )
