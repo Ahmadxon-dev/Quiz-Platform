@@ -29,8 +29,7 @@ import {Card} from "@/components/ui/card.jsx";
 function UsersPage(props) {
     const [allUsers, setAllUsers] = useState([])
     const [loading, setLoading] = useState(true)
-    const [currentName, setCurrentName] = useState("")
-    const [currentEmail, setCurrentEmail] = useState("")
+    const [currentPassword, setCurrentPassword] = useState("")
     const [role, setRole] = useState(null)
     const user = useSelector(state => state.user)
     const {toast} = useToast()
@@ -90,8 +89,7 @@ function UsersPage(props) {
                 "Content-Type":"application/json"
             },
             body: JSON.stringify({
-                email: currentEmail,
-                name: currentName,
+                password: currentPassword
             })
         })
             .then(res => res.json())
@@ -113,8 +111,7 @@ function UsersPage(props) {
                     filteredUsers = data.allUsers.filter(user => user.role !== "bosh admin")
                 }
                 setAllUsers(filteredUsers)
-                setCurrentName("")
-                setCurrentEmail("")
+                setCurrentPassword("")
             })
     }
     if (loading) {
@@ -157,43 +154,28 @@ function UsersPage(props) {
                                                 <div className="flex justify-end space-x-2">
                                                     <Dialog>
                                                         <DialogTrigger asChild>
-                                                            <Button size={"icon"} variant={"outline"} onClick={()=>{
-                                                                setCurrentName(user.name)
-                                                                setCurrentEmail(user.email)
-                                                            }}>
+                                                            <Button size={"icon"} variant={"outline"} >
                                                                 <Edit className="h-4 w-4"/>
                                                             </Button>
                                                         </DialogTrigger>
                                                         <DialogContent className="sm:max-w-[425px]">
                                                             <DialogHeader>
-                                                                <DialogTitle>Inspektor malumotlarini tahrirlash</DialogTitle>
+                                                                <DialogTitle>Parolni O'zgartirish</DialogTitle>
                                                                 {/*<DialogDescription>*/}
                                                                 {/*    Make changes to your profile here. Click save when you're done.*/}
                                                                 {/*</DialogDescription>*/}
                                                             </DialogHeader>
                                                             <div className="grid gap-4 py-4">
                                                                 <div className="grid grid-cols-4 items-center gap-4">
-                                                                    <Label htmlFor="username" className="text-right">
-                                                                        F.I.SH
+                                                                    <Label htmlFor="password" className="text-right">
+                                                                        Yangi parol kiriting
                                                                     </Label>
                                                                     <Input
-                                                                        id="username"
-                                                                        defaultValue={currentName}
+                                                                        id="password"
+                                                                        // defaultValue={currentPassword}
                                                                         className="col-span-3"
-                                                                        value={currentName}
-                                                                        onChange={e=>setCurrentName(e.target.value)}
-                                                                    />
-                                                                </div>
-                                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                                    <Label htmlFor="email" className="text-right">
-                                                                        Email
-                                                                    </Label>
-                                                                    <Input
-                                                                        id="email"
-                                                                        defaultValue={currentEmail}
-                                                                        className="col-span-3"
-                                                                        value={currentEmail}
-                                                                        onChange={e=>setCurrentEmail(e.target.value)}
+                                                                        value={currentPassword}
+                                                                        onChange={e=>setCurrentPassword(e.target.value)}
                                                                     />
                                                                 </div>
                                                             </div>

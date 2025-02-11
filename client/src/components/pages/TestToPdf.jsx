@@ -81,7 +81,7 @@ function TestToPdf(props) {
             doc.text(`Test Variant-${index + 1}`, 10, 10);
             doc.setFontSize(12);
             doc.text("F.I.SH: ______________________", 10, 20);
-            doc.text("Sana: _______________________", 120, 20);
+            doc.text("Sinf: _______________________", 120, 20);
 
             questions.forEach((q, i) => {
                 doc.setFontSize(14);

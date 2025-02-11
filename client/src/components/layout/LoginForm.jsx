@@ -8,10 +8,12 @@ import {Link, useNavigate} from "react-router-dom";
 import {useToast} from "@/hooks/use-toast.js";
 import {useDispatch, useSelector} from "react-redux";
 import {setUser} from "@/features/user/userSlice.js";
+import {Loader2} from "lucide-react";
 
 function LoginForm(props) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [loading, setLoading] = useState(false)
     const {toast} = useToast()
     const navigate = useNavigate()
     const user = useSelector((state) => state.user);
@@ -25,6 +27,7 @@ function LoginForm(props) {
             })
             return
         }
+        setLoading(true)
         fetch(`${import.meta.env.VITE_SERVER}/auth/signin`, {
             method: "POST",
             headers: {
@@ -50,6 +53,7 @@ function LoginForm(props) {
                         variant:"success",
                         duration:4000
                     })
+                    setLoading(false)
                     setPassword("")
                     setEmail("")
                     const {email, name, role} = data.user
@@ -94,6 +98,7 @@ function LoginForm(props) {
                             </div>
                             <Button type="button" onClick={handleSubmit} className="w-full">
                                 Kirish
+                                {loading ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : ""}
                             </Button>
                         </div>
                         <div className="mt-4 text-center text-sm">

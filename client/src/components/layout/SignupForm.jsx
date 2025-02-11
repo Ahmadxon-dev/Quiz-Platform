@@ -6,9 +6,11 @@ import {Input} from "@/components/ui/input.jsx";
 import {Button} from "@/components/ui/button.jsx";
 import {Link, useNavigate} from "react-router-dom";
 import {useToast} from "@/hooks/use-toast.js";
+import {Loader2} from "lucide-react";
 
 function SignupForm(props) {
     // console.log(import.meta.env.VITE_SERVER)
+    const [loading, setLoading] = useState(false)
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -25,6 +27,7 @@ function SignupForm(props) {
             })
             return
         }
+        setLoading(true)
         fetch(`${import.meta.env.VITE_SERVER}/auth/signup`, {
             method:"POST",
             headers:{
@@ -50,6 +53,7 @@ function SignupForm(props) {
                         variant:"success",
                         duration:4000
                     })
+                    setLoading(false)
                     setPassword("")
                     setEmail("")
                     setName("")
@@ -109,6 +113,7 @@ function SignupForm(props) {
                             </div>
                             <Button onClick={handleSubmit} type="button" className="w-full">
                                 Ro'yxatdan o'tish
+                                {loading ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : ""}
                             </Button>
                         </div>
                         <div className="mt-4 text-center text-sm">

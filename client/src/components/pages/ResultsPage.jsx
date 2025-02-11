@@ -92,7 +92,7 @@ function ResultsPage(props) {
                                             const timeTaken = calculateTimeTaken(item.startTime, item.updatedAt)
                                             return (
                                                 <TableRow key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                                    <TableCell className="font-medium">{item.subtopicname}</TableCell>
+                                                    <TableCell className="font-medium">{item.subtopicname.join(", ")}</TableCell>
                                                     <TableCell>{item.questions.length}</TableCell>
                                                     <TableCell>{item.result}</TableCell>
                                                     <TableCell>

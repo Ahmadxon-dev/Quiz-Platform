@@ -8,17 +8,17 @@ router.get("/get-users", async (req,res)=>{
 })
 
 router.put("/edit/:userId", async (req,res)=>{
-    const {email, name} = req.body
+    const {password} = req.body
     const {userId} = req.params
 
+    const newPassword = await bcrypt.hash(password, 10)
     await Person.findByIdAndUpdate(userId, {
-        email,
-        name
+        password:newPassword
     },
         {new: true}
     )
     const allUsers = await Person.find().sort({_id:-1})
-    return res.status(200).json({msg:"Malumotlar Yangilandi", allUsers})
+    return res.status(200).json({msg:"Parol Yangilandi", allUsers})
 })
 
 router.delete("/delete/:userId", async (req,res) =>{
