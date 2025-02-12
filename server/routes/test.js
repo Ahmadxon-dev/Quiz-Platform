@@ -10,57 +10,33 @@ router.get("/getfulltestdb", async (req,res)=>{
     return res.json(data)
 })
 router.post("/start", async (req,res)=>{
-    const {time, subtopicnamesArray, userEmail} = req.body
+    const {time, subtopicnamesArray, userEmail, numberOfQuestions } = req.body
     const topic = await TopicAndQuestion.findOne({
         "subtopics.subtopicname": { $in: subtopicnamesArray },
     });
     if (!topic){
         return res.status(400).json({error: "Subtopic not found"})
     }
-    // return res.json(topic)
     let allQuestions = []
     topic.subtopics?.forEach(subtopic=>{
         subtopic.questions.forEach(question=>allQuestions.push(question))
     })
-    // return res.json(allQuestions)
+    if (allQuestions.length<numberOfQuestions){
+        return res.status(400).json({ error: `Tanlangan savollar soni, savollardan ko'p.`, additional:`Barcha savollar: ${allQuestions.length}ta` });
+
+    }
+    const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random()); // Shuffle array
+    const selectedQuestions = shuffledQuestions.slice(0, numberOfQuestions || allQuestions.length); // Limit questions
     const newTest = new Test({
         subtopicname: subtopicnamesArray,
-        questions:allQuestions,
+        questions:selectedQuestions,
         startTime: new Date(),
         remainingTime: time, // Example: 1 hour
         isCompleted: false,
         userEmail,
     })
-    // return res.json(newTest)
     await newTest.save()
     return res.status(200).json({msg:"test created", testId:newTest._id, newTest})
-
-
-    // const topic = await TopicAndQuestion.findOne({"subtopics.subtopicname": subtopicname,});
-    // if (!topic) {
-    //     return res.status(404).json({ error: "Subtopic not found" });
-    // }
-    // const subtopic = topic.subtopics.find(st=>st.subtopicname===subtopicname)
-    // if (!subtopic) {
-    //     return res.status(404).json({ error: "Subtopic not found" });
-    // }
-    // const questions = subtopic.questions.map((q) => ({
-    //     questionId: q.questionId, // Random question ID
-    //     question: q.question,
-    //     options: q.options,
-    //     selectedAnswer:null,
-    //     answer: q.answer, // Keep the correct answer for evaluation (optional)
-    // }));
-    // const newTest = new Test({
-    //     subtopicname,
-    //     questions,
-    //     startTime: new Date(),
-    //     remainingTime: time, // Example: 1 hour
-    //     isCompleted: false,
-    //     userEmail,
-    // });
-    // await newTest.save()
-
 })
 
 router.get("/:testId", async (req,res)=>{

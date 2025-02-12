@@ -10,11 +10,12 @@ import {Button} from "@/components/ui/button.jsx";
 import {Link, useNavigate} from "react-router-dom";
 import {Label} from "@/components/ui/label.jsx";
 import {Input} from "@/components/ui/input.jsx";
-import {Loader2} from "lucide-react";
+import {Loader2, Minus, Plus} from "lucide-react";
 import {useDispatch, useSelector} from "react-redux";
 import {setTest} from "@/features/test/testSlice.js";
 import {Checkbox} from "@/components/ui/checkbox.jsx";
 import {Card} from "@/components/ui/card.jsx";
+import {useToast} from "@/hooks/use-toast.js";
 
 
 function DefiningTestPage(props) {
@@ -23,6 +24,8 @@ function DefiningTestPage(props) {
     const [loadingforBtn, setLoadingforBtn] = useState(false)
     const [topicsData, setTopicsData] = useState([])
     const [loading, setLoading] = useState(true)
+    const [numQuestions, setNumQuestions] = useState(0)
+    const {toast} = useToast()
     const dispatch = useDispatch()
     const user = useSelector(state => state.user);
     const navigate = useNavigate()
@@ -34,7 +37,6 @@ function DefiningTestPage(props) {
     selectedSubtopics.forEach(subtopic => {
         selectedSubTopicNames.push(subtopic.subtopicname)
     })
-    console.log(selectedSubTopicNames)
     const getFullDb = async () => {
         await fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
             .then(res => res.json())
@@ -69,10 +71,21 @@ function DefiningTestPage(props) {
                 time: timeSeconds,
                 subtopicnamesArray: selectedSubTopicNames, //selected subtopic with questions,
                 userEmail: user.email,
+                numberOfQuestions:numQuestions,
             })
         })
             .then(res => res.json())
             .then(data => {
+                if (data.error){
+                    setLoadingforBtn(false)
+                    toast({
+                        title: data.error,
+                        variant: "destructive",
+                        description: data.additional,
+                        duration:4000,
+                    })
+                    return
+                }
                 setLoadingforBtn(false)
                 dispatch(setTest(data.newTest))
                 navigate(`/test/${data.testId}`)
@@ -142,6 +155,40 @@ function DefiningTestPage(props) {
 
                             </div>
                         )}
+                        <div className="flex mx-auto justify-center mb-3">
+                            <div className={`w-full`}>
+                                <Label htmlFor="numQuestions"
+                                       className="block text-sm font-medium text-gray-700">
+                                    Savollar soni
+                                </Label>
+                                <div className="flex items-center mt-1">
+                                    <Button
+                                        type="button"
+                                        onClick={() => setNumQuestions(Math.max(1, numQuestions - 1))}
+                                        className="rounded-r-none"
+                                        variant="outline"
+                                    >
+                                        <Minus className="h-4 w-4"/>
+                                    </Button>
+                                    <Input
+                                        type="number"
+                                        id="numQuestions"
+                                        value={numQuestions}
+                                        onChange={(e) => setNumQuestions(parseInt(e.target.value))}
+                                        className="rounded-none text-center"
+                                        min="1"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={() => setNumQuestions(numQuestions + 1)}
+                                        className="rounded-l-none"
+                                        variant="outline"
+                                    >
+                                        <Plus className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                         <div className="mb-3 grid grid-cols-3 gap-4">
                             {(["soat", "daqiqa", "soniya"]).map((unit) => (
                                 <div key={unit} className="space-y-2">
@@ -162,7 +209,6 @@ function DefiningTestPage(props) {
                                 </div>
                             ))}
                         </div>
-                        {/*{selectedSubtopic && (*/}
                         <div>
                             <Button disabled={loadingforBtn && true} className={`w-full`} onClick={handleStart}>
                                 Testni boshlash
