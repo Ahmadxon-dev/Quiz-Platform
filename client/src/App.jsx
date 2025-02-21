@@ -13,6 +13,7 @@ import ResultsPage from "@/components/pages/ResultsPage.jsx";
 import EachResultPage from "@/components/pages/EachResultPage.jsx";
 import UsersPage from "@/components/pages/UsersPage.jsx";
 import TestToPdf from "@/components/pages/TestToPdf.jsx";
+import AddTopicsPage from "@/components/pages/AddTopicsPage.jsx";
 
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
             <Route path={"/results/:testId"} element={<EachResultPage />} />
             <Route path={"/users"} element={<UsersPage />} />
             <Route path={`/testtopdf`} element={<TestToPdf />} />
+            <Route path={"/addtopic"} element={<AddTopicsPage />} />
         </Routes>
     </>
   )

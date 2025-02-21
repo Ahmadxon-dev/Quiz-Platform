@@ -46,6 +46,11 @@ function Navbar(props) {
             path: '/testtopdf',
             label: 'Test-PDF',
             roles: ['admin', "bosh admin"],
+        },
+        {
+            path: '/addtopic',
+            label: 'Savollar qo\'shish',
+            roles: ["bosh admin"],
         }
 
         // {

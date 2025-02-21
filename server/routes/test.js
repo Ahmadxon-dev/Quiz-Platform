@@ -3,6 +3,7 @@ const router = Router()
 const Test = require("../models/Test")
 const TopicAndQuestion = require("../models/TopicAndQuestion")
 const {all} = require("express/lib/application");
+const mongoose = require("mongoose");
 //start
 
 router.get("/getfulltestdb", async (req,res)=>{
@@ -93,4 +94,132 @@ router.get("/results/:userEmail", async (req,res)=>{
     return res.json(test)
 })
 
+router.put("/topics/add", async (req,res)=>{
+    const { newMainTopic } = req.body
+    const newTopic = new TopicAndQuestion({
+        maintopicname: newMainTopic,
+        subtopics:[]
+    })
+    await newTopic.save()
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Yangi bo'lim muvaffaqiyatli yaratildi", newData})
+})
+router.delete("/topics/delete", async (req,res)=>{
+    const { mainTopicId } = req.body
+    await TopicAndQuestion.findByIdAndDelete(mainTopicId)
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Bo'lim muvaffaqiyatli o'chirildi", newData})
+})
+router.put("/topics/edit", async (req,res)=>{
+    const { mainTopicId, newMainTopicName } = req.body
+    await TopicAndQuestion.findByIdAndUpdate(mainTopicId, {maintopicname:newMainTopicName })
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Bo'lim muvaffaqiyatli o'zgartirildi", newData})
+})
+
+
+router.post("/subtopics/add", async (req,res)=>{
+    const { newSubTopic, mainTopicId } = req.body
+    await TopicAndQuestion.findByIdAndUpdate(mainTopicId,
+        {
+            $push: {
+                subtopics: {
+                    subtopicname: newSubTopic,
+                    questions: []
+                }
+            }
+        },
+        { new: true }
+        )
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Yangi mavzu muvaffaqiyatli yaratildi", newData})
+})
+router.delete("/subtopics/delete", async (req,res)=>{
+    const { subTopicName, mainTopicId } = req.body
+    await TopicAndQuestion.findByIdAndUpdate(
+        mainTopicId,
+        {
+            $pull: {
+                subtopics: { subtopicname: subTopicName }
+            }
+        },
+        { new: true }
+    )
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Mavzu muvaffaqiyatli o'chirildi", newData})
+})
+
+router.put("/subtopics/edit", async (req,res)=>{
+    const { mainTopicId, newSubTopicName, oldSubTopicName } = req.body
+    await TopicAndQuestion.findOneAndUpdate(
+        { _id: mainTopicId, "subtopics.subtopicname": oldSubTopicName },
+        { $set: { "subtopics.$.subtopicname": newSubTopicName } },
+        { new: true }
+    )
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Mavzu muvaffaqiyatli o'zgartirildi", newData})
+})
+
+router.post("/questions/add", async (req,res)=>{
+    const {mainTopicId, subTopicName, question, answer, options} = req.body
+    await TopicAndQuestion.findOneAndUpdate(
+        { _id: mainTopicId, "subtopics.subtopicname": subTopicName },
+        {
+            $push: {
+                "subtopics.$.questions": {
+                    questionId: new mongoose.Types.ObjectId(),
+                    question,
+                    answer,
+                    options
+                }
+            }
+        },
+        { new: true }
+    )
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Yangi savol muvaffaqiyatli qo'shildi", newData})
+})
+router.delete("/questions/delete", async (req,res)=>{
+    const { mainTopicId, subTopicName, questionId } = req.body;
+
+    await TopicAndQuestion.findOneAndUpdate(
+        { _id: mainTopicId, "subtopics.subtopicname": subTopicName },
+        {
+            $pull: {
+                "subtopics.$[subtopic].questions": { questionId: new mongoose.Types.ObjectId(questionId) }
+            }
+        },
+        {
+            new: true,
+            arrayFilters: [{ "subtopic.subtopicname": subTopicName }] // Ensures it targets only the correct subtopic
+        }
+    );
+
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Savol muvaffaqiyatli o'chirildi", newData})
+})
+router.put("/questions/edit", async (req,res)=>{
+    const {mainTopicId, subTopicName, questionId, newQuestion, options, answer} = req.body
+
+    await TopicAndQuestion.findOneAndUpdate(
+        { _id: mainTopicId, "subtopics.subtopicname": subTopicName, "subtopics.questions.questionId": questionId },
+        {
+            $set: {
+                "subtopics.$[subtopic].questions.$[question].question": newQuestion,
+                "subtopics.$[subtopic].questions.$[question].options": options,
+                "subtopics.$[subtopic].questions.$[question].answer": answer
+            }
+        },
+        {
+            new: true,
+            arrayFilters: [
+                { "subtopic.subtopicname": subTopicName },
+                { "question.questionId": new mongoose.Types.ObjectId(questionId) }
+            ]
+        }
+    );
+
+    const newData = await TopicAndQuestion.find()
+    return res.status(200).json({msg: "Savol muvaffaqiyatli o'zgartirildi", newData})
+})
 module.exports = router
