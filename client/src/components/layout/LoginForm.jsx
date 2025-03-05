@@ -46,6 +46,7 @@ function LoginForm(props) {
                         variant:"destructive",
                         duration:4000
                     })
+                    setLoading(false)
                 }else{
                     localStorage.setItem("token", data.token)
                     toast({
@@ -56,8 +57,8 @@ function LoginForm(props) {
                     setLoading(false)
                     setPassword("")
                     setEmail("")
-                    const {email, name, role} = data.user
-                    dispatch(setUser({email, name, role}))
+                    const {email, name, role, _id} = data.user
+                    dispatch(setUser({email, name, role, _id}))
                     navigate("/")
                 }
             })

@@ -14,6 +14,8 @@ import EachResultPage from "@/components/pages/EachResultPage.jsx";
 import UsersPage from "@/components/pages/UsersPage.jsx";
 import TestToPdf from "@/components/pages/TestToPdf.jsx";
 import AddTopicsPage from "@/components/pages/AddTopicsPage.jsx";
+import SettingsPage from "@/components/pages/SettingsPage.jsx";
+import AllResultsPage from "@/components/pages/AllResultsPage.jsx";
 
 
 function App() {
@@ -59,6 +61,30 @@ function App() {
             <Route path={"/users"} element={<UsersPage />} />
             <Route path={`/testtopdf`} element={<TestToPdf />} />
             <Route path={"/addtopic"} element={<AddTopicsPage />} />
+            <Route path={"/profile/settings"} element={<SettingsPage />} />
+            <Route path={"/allresults"} element={<AllResultsPage />}/>
+            {/*<Route path="/" element={<HomePage />} />*/}
+            {/*<Route path="/signup" element={<SignupForm />} />*/}
+            {/*<Route path="/signin" element={<LoginForm />} />*/}
+
+            {/*/!* Protected Routes *!/*/}
+            {/*<Route element={<ProtectedRoute allowedRoles={["admin", "moderator"]} />}>*/}
+            {/*    <Route path="/users" element={<UsersPage />} />*/}
+            {/*    <Route path="/addtopic" element={<AddTopicsPage />} />*/}
+            {/*</Route>*/}
+
+            {/*<Route element={<ProtectedRoute allowedRoles={["admin", "user"]} />}>*/}
+            {/*    <Route path="/profile/settings" element={<SettingsPage />} />*/}
+            {/*</Route>*/}
+
+            {/*<Route element={<ProtectedRoute allowedRoles={["user"]} />}>*/}
+            {/*    <Route path="/results" element={<ResultsPage />} />*/}
+            {/*    <Route path="/results/:testId" element={<EachResultPage />} />*/}
+            {/*</Route>*/}
+
+            {/*<Route element={<ProtectedRoute allowedRoles={["admin"]} />}>*/}
+            {/*    <Route path="/testtopdf" element={<TestToPdf />} />*/}
+            {/*</Route>*/}
         </Routes>
     </>
   )

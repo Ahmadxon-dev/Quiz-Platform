@@ -46,11 +46,11 @@ router.post("/signin", async (req,res)=>{
                 .then(doMatch=>{
                     if (doMatch){
                         const token = jwt.sign({_id:savedUser._id}, process.env.JWT_SECRET)
-                        const {email, role, name} = savedUser
+                        const {email, role, name, _id} = savedUser
                         return res.json({
                             msg: "Muvaffaqiyatli kirildi",
                             token,
-                            user:{email, role, name}
+                            user:{email, role, name, _id}
                         })
                     }else{
                         return res.status(400).json({error:"Parol xato"})
@@ -70,8 +70,8 @@ router.post("/getuser", async (req,res)=>{
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     await Person.findById(decoded._id)
         .then(user=>{
-            const {email, name, role} = user
-            return res.status(200).json({email, name, role})
+            const {email, name, role, _id} = user
+            return res.status(200).json({email, name, role, _id})
         })
 })
 module.exports = router

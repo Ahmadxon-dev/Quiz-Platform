@@ -29,7 +29,8 @@ import {Card} from "@/components/ui/card.jsx";
 function UsersPage(props) {
     const [allUsers, setAllUsers] = useState([])
     const [loading, setLoading] = useState(true)
-    const [currentPassword, setCurrentPassword] = useState("")
+    const [tableLoading, setTableLoading] = useState(false)
+    const [loadingUserId, setLoadingUserId] = useState(null);
     const [role, setRole] = useState(null)
     const user = useSelector(state => state.user)
     const {toast} = useToast()
@@ -58,6 +59,7 @@ function UsersPage(props) {
     }, [user])
 
     const handleDelete = async (userId) => {
+        setLoadingUserId(userId)
         await fetch(`${import.meta.env.VITE_SERVER}/user/delete/${userId}`, {
             method: "delete"
         })
@@ -73,6 +75,7 @@ function UsersPage(props) {
                     title: data.msg,
                     variant: "success",
                 })
+                setLoadingUserId(null)
                 let filteredUsers = []
                 if (user.role === "admin") {
                     filteredUsers = data.allUsers.filter(user => user.role === "user")
@@ -82,36 +85,60 @@ function UsersPage(props) {
                 setAllUsers(filteredUsers)
             })
     }
-    const handleEdit = async (userId) => {
-        await fetch(`${import.meta.env.VITE_SERVER}/user/edit/${userId}`, {
+    const roleToUser = async (userEmail) =>{
+        setLoadingUserId(userEmail)
+        await fetch(`${import.meta.env.VITE_SERVER}/user/role-to-user/`, {
             method: "put",
             headers:{
-                "Content-Type":"application/json"
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                password: currentPassword
+                userEmail
             })
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    toast({
-                        title: data.error,
-                        variant: "destructive",
-                    })
-                }
+            .then(res=>res.json())
+            .then(data=>{
                 toast({
                     title: data.msg,
-                    variant: "success",
+                    variant:'success',
+                    duration:4000,
                 })
+                setLoadingUserId(null)
                 let filteredUsers = []
                 if (user.role === "admin") {
-                    filteredUsers = data.allUsers.filter(user => user.role === "user")
+                    filteredUsers = data.newData.filter(user => user.role === "user")
                 } else if (user.role === "bosh admin") {
-                    filteredUsers = data.allUsers.filter(user => user.role !== "bosh admin")
+                    filteredUsers = data.newData.filter(user => user.role !== "bosh admin")
                 }
                 setAllUsers(filteredUsers)
-                setCurrentPassword("")
+            })
+    }
+    const roleToAdmin = async (userEmail) =>{
+        setLoadingUserId(userEmail)
+        await fetch(`${import.meta.env.VITE_SERVER}/user/role-to-admin/`, {
+            method: "put",
+            headers:{
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                userEmail
+            })
+        })
+            .then(res=>res.json())
+            .then(data=>{
+                toast({
+                    title: data.msg,
+                    variant:'success',
+                    duration:4000,
+                })
+                setLoadingUserId(null)
+                let filteredUsers = []
+                if (user.role === "admin") {
+                    filteredUsers = data.newData.filter(user => user.role === "user")
+                } else if (user.role === "bosh admin") {
+                    filteredUsers = data.newData.filter(user => user.role !== "bosh admin")
+                }
+                setAllUsers(filteredUsers)
             })
     }
     if (loading) {
@@ -152,53 +179,28 @@ function UsersPage(props) {
                                             <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end space-x-2">
-                                                    <Dialog>
-                                                        <DialogTrigger asChild>
-                                                            <Button size={"icon"} variant={"outline"} >
-                                                                <Edit className="h-4 w-4"/>
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent className="sm:max-w-[425px]">
-                                                            <DialogHeader>
-                                                                <DialogTitle>Parolni O'zgartirish</DialogTitle>
-                                                                {/*<DialogDescription>*/}
-                                                                {/*    Make changes to your profile here. Click save when you're done.*/}
-                                                                {/*</DialogDescription>*/}
-                                                            </DialogHeader>
-                                                            <div className="grid gap-4 py-4">
-                                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                                    <Label htmlFor="password" className="text-right">
-                                                                        Yangi parol kiriting
-                                                                    </Label>
-                                                                    <Input
-                                                                        id="password"
-                                                                        // defaultValue={currentPassword}
-                                                                        className="col-span-3"
-                                                                        value={currentPassword}
-                                                                        onChange={e=>setCurrentPassword(e.target.value)}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                            <DialogFooter>
-                                                                <DialogClose asChild>
-                                                                    <Button type="submit" onClick={()=>handleEdit(user._id)}>Saqlash</Button>
-                                                                </DialogClose>
-                                                            </DialogFooter>
-                                                        </DialogContent>
-                                                    </Dialog>
+                                                    {(loadingUserId === user._id || loadingUserId === user.email) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                                     <Button size={"icon"} onClick={() => handleDelete(user._id)} variant={"outline"}>
                                                         <Trash className=" h-4 w-4"/>
                                                     </Button>
                                                     {
-                                                        role === "bosh admin" && (<DropdownMenu>
+                                                        (role === "bosh admin" || "admin") && (<DropdownMenu>
                                                             <DropdownMenuTrigger>
                                                                 <Button size={"icon"} variant={"outline"}>
                                                                     <EllipsisVertical className={`h-7 w-7`}/>
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent>
-                                                                <DropdownMenuLabel>.....test</DropdownMenuLabel>
-                                                                <DropdownMenuSeparator />
+                                                                {/*<DropdownMenuLabel>.....test</DropdownMenuLabel>*/}
+                                                                {/*<DropdownMenuSeparator />*/}
+                                                                {user.role === "user" &&
+                                                                    <DropdownMenuItem onClick={()=>roleToAdmin(user.email)}>User {"->"} Admin</DropdownMenuItem>
+                                                                }
+
+                                                                { role === "bosh admin" && user.role === "admin" &&
+                                                                    <DropdownMenuItem  onClick={()=>roleToUser(user.email)}>Admin {"->"} User</DropdownMenuItem>
+                                                                }
+
                                                                 {/*<DropdownMenuItem>Profile</DropdownMenuItem>*/}
                                                                 {/*<DropdownMenuItem>Billing</DropdownMenuItem>*/}
                                                                 {/*<DropdownMenuItem>Team</DropdownMenuItem>*/}

@@ -11,7 +11,7 @@ router.get("/getfulltestdb", async (req,res)=>{
     return res.json(data)
 })
 router.post("/start", async (req,res)=>{
-    const {time, subtopicnamesArray, userEmail, numberOfQuestions } = req.body
+    const {time, subtopicnamesArray, userEmail, userId, numberOfQuestions } = req.body
     const topic = await TopicAndQuestion.findOne({
         "subtopics.subtopicname": { $in: subtopicnamesArray },
     });
@@ -35,11 +35,15 @@ router.post("/start", async (req,res)=>{
         remainingTime: time, // Example: 1 hour
         isCompleted: false,
         userEmail,
+        userId
     })
     await newTest.save()
     return res.status(200).json({msg:"test created", testId:newTest._id, newTest})
 })
-
+router.get("/all-results", async (req,res)=>{
+    const test = await Test.find().populate('userId')
+    return res.status(200).json(test)
+})
 router.get("/:testId", async (req,res)=>{
     const {testId} = req.params
     await Test.findById(testId)
@@ -93,6 +97,8 @@ router.get("/results/:userEmail", async (req,res)=>{
     const test = await Test.find({userEmail}).sort({ _id: -1 })
     return res.json(test)
 })
+
+
 
 router.put("/topics/add", async (req,res)=>{
     const { newMainTopic } = req.body

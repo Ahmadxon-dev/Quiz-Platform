@@ -28,5 +28,32 @@ router.delete("/delete/:userId", async (req,res) =>{
     return res.status(200).json({msg:"Muvaffaqiyatli o'chirildi", allUsers})
 })
 
+router.put("/profile/name/edit", async (req,res)=>{
+    const {newName, userEmail} = req.body
+    await Person.findOneAndUpdate(
+        {email:userEmail},
+        {name:newName}
+    )
+    return res.status(200).json({msg: "Ismingiz muvaffaqiyatli o'zgartirildi"})
+})
+
+router.put("/role-to-user/", async (req,res)=>{
+    const {userEmail} = req.body
+    await Person.findOneAndUpdate(
+        {email: userEmail},
+        {role:"user"}
+    )
+    const newData = await Person.find().sort({_id:-1})
+    return res.status(200).json({msg: "Rol muvaffaqiyatli o'zgartirildi", newData})
+})
+router.put("/role-to-admin/", async (req,res)=>{
+    const {userEmail} = req.body
+    await Person.findOneAndUpdate(
+        {email: userEmail},
+        {role:"admin"}
+    )
+    const newData = await Person.find().sort({_id:-1})
+    return res.status(200).json({msg: "Rol muvaffaqiyatli o'zgartirildi", newData})
+})
 
 module.exports = router

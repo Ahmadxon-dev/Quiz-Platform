@@ -51,6 +51,11 @@ function Navbar(props) {
             path: '/addtopic',
             label: 'Savollar qo\'shish',
             roles: ["bosh admin"],
+        },
+        {
+            path: '/allresults',
+            label: 'Barcha Natijalar',
+            roles: ["bosh admin"],
         }
 
         // {
@@ -71,7 +76,7 @@ function Navbar(props) {
                         <Link to="/" className="flex-shrink-0 flex items-center  text-gray-700 hover:text-gray-900 ">
                             <span className="text-2xl font-bold">Innova</span>
                         </Link>
-                        <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                        <div className="hidden sm:ml-6 lg:flex sm:items-center">
                             {filteredLinks.map((link) => (
                                 <Link
                                     key={link.path}
@@ -86,7 +91,7 @@ function Navbar(props) {
                         </div>
                     </div>
                     <div className="flex items-center">
-                        <h5 className={`pr-2 lg:flex md:flex 2xl:flex xl:flex  gap-1 hidden`}>Hush kelibsiz, <b>{user.name}</b></h5>
+                        <h5 className={`pr-2 lg:flex md:flex  2xl:flex xl:flex  gap-1 hidden`}>Hush kelibsiz, <b>{user.name}</b></h5>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="secondary" size="icon" className="rounded-full">
@@ -95,16 +100,16 @@ function Navbar(props) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                                {/*<DropdownMenuLabel>My Account</DropdownMenuLabel>*/}
                                 <DropdownMenuSeparator/>
                                 <Link to={"/profile/settings"} className={`cursor-pointer`}>
-                                    <DropdownMenuItem className={`cursor-pointer`}>Settings</DropdownMenuItem>
+                                    <DropdownMenuItem className={`cursor-pointer`}>Sozlamalar</DropdownMenuItem>
                                 </Link>
                                 <DropdownMenuSeparator/>
                                 <Link to={"/signin"}
                                       className={`cursor-pointer`}
                                       onClick={() => dispatch(logout())}>
-                                    <DropdownMenuItem className={`cursor-pointer`}>Logout</DropdownMenuItem>
+                                    <DropdownMenuItem className={`cursor-pointer`}>Chiqish</DropdownMenuItem>
                                 </Link>
                             </DropdownMenuContent>
 
@@ -114,13 +119,13 @@ function Navbar(props) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="relative rounded-full sm:hidden"
+                                    className="relative rounded-full lg:hidden"
                                     aria-label="Main menu"
                                 >
                                     <Menu className="h-7 w-7"/>
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="right" className="w-[300px] sm:hidden pt-10">
+                            <SheetContent side="right" className="w-[300px] lg:hidden pt-10">
                                 <nav className="flex flex-col gap-4">
                                     {filteredLinks.map((link, index) => (
                                         <Link

@@ -10,7 +10,6 @@ function EachResultPage(props) {
     const totalQuestions = !loading && data?.questions.length
     const answeredQuestions = !loading && data?.questions.filter((q) => q.selectedAnswer !== null).length
     const correctAnswers = !loading && data?.questions.filter((q) => q.selectedAnswer === q.answer).length
-    console.log(totalQuestions, answeredQuestions, correctAnswers)
     const getTest = async ()=>{
         await fetch(`${import.meta.env.VITE_SERVER}/test/${params.testId}`)
             .then(res=>res.json())
@@ -38,21 +37,21 @@ function EachResultPage(props) {
                 </CardHeader>
                 <CardContent>
                     <p className="text-lg mb-2">Test boshlangan vaqti: {new Date(data.startTime).toLocaleString()}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div className="bg-blue-100 dark:bg-blue-800 p-4 rounded-lg">
                             <p className="font-semibold">Savollar soni</p>
                             <p className="text-2xl font-bold">{totalQuestions}</p>
                         </div>
+                        {/*<div className="bg-yellow-100 dark:bg-yellow-800 p-4 rounded-lg">*/}
+                        {/*    <p className="font-semibold">Javob berilgan savollar</p>*/}
+                        {/*    <p className="text-2xl font-bold">{answeredQuestions}</p>*/}
+                        {/*</div>*/}
                         <div className="bg-yellow-100 dark:bg-yellow-800 p-4 rounded-lg">
-                            <p className="font-semibold">Javob berilgan savollar</p>
-                            <p className="text-2xl font-bold">{answeredQuestions}</p>
-                        </div>
-                        <div className="bg-green-100 dark:bg-green-800 p-4 rounded-lg">
                             <p className="font-semibold">To'g'ri javob berilganlar</p>
                             <p className="text-2xl font-bold">{correctAnswers}</p>
                         </div>
                         <div className="bg-purple-100 dark:bg-purple-800 p-4 rounded-lg">
-                            <p className="font-semibold">Hisob</p>
+                            <p className="font-semibold">Natija</p>
                             <p className="text-2xl font-bold">
                                 {data.result} / {totalQuestions}
                             </p>

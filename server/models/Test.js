@@ -7,7 +7,8 @@ const TestSchema = new Schema({
     remainingTime: Number, //  time in seconds
     isCompleted: Boolean,
     result:{type:Number, default:0},
-    userEmail:{type:String}
+    userEmail:{type:String},
+    userId: { type: Schema.ObjectId, ref: 'Person', required: true }
 },  {timestamps:true, collection: "Tests"})
 
 module.exports = model("Test", TestSchema)

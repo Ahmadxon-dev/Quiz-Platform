@@ -4,7 +4,7 @@ const initialState = {
     email:null,
     name:null,
     role:null,
-    counterValue: 0,
+    _id:null,
 };
 
 const userSlice = createSlice({
@@ -18,11 +18,13 @@ const userSlice = createSlice({
             state.email = action.payload.email
             state.role = action.payload.role
             state.name = action.payload.name
+            state._id = action.payload._id
         },
         logout: (state) =>{
             state.email = null
             state.name = null
             state.role = null
+            state._id = null
             localStorage.clear()
         }
     },

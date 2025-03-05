@@ -72,6 +72,7 @@ function DefiningTestPage(props) {
                 subtopicnamesArray: selectedSubTopicNames, //selected subtopic with questions,
                 userEmail: user.email,
                 numberOfQuestions:numQuestions,
+                userId:user._id
             })
         })
             .then(res => res.json())
@@ -131,7 +132,7 @@ function DefiningTestPage(props) {
                             </Select>
                         </div>
 
-                        {selectedMaintopic && (
+                        {selectedMaintopic &&  subtopics.length>0 ? (
                             <div className="space-y-2">
                                 <Label>Mavzularni tanlang</Label>
                                 {
@@ -154,7 +155,10 @@ function DefiningTestPage(props) {
 
 
                             </div>
-                        )}
+                        )
+                        :
+                        <Label>Bu bo'limda mavzular yo'q</Label>
+                        }
                         <div className="flex mx-auto justify-center mb-3">
                             <div className={`w-full`}>
                                 <Label htmlFor="numQuestions"

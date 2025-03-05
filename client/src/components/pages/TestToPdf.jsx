@@ -8,9 +8,11 @@ import {Input} from "@/components/ui/input.jsx";
 import {Download, FileText, Loader2, Minus, Plus} from "lucide-react";
 import {Card, CardContent} from "@/components/ui/card.jsx";
 import {useToast} from "@/hooks/use-toast.js";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion.jsx";
 
 function TestToPdf(props) {
     const [selectedSubtopics, setSelectedSubtopics] = useState([]);
+    const [openTopics, setOpenTopics] = useState({})
     const [database, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [numQuestions, setNumQuestions] = useState(5);
@@ -23,12 +25,19 @@ function TestToPdf(props) {
             .then(res => res.json())
             .then(data => {
                 setData(data)
+                console.log(data)
                 setLoading(false)
             })
     }
     useEffect(() => {
         getData()
     }, [])
+    const toggleTopic = (topicId) => {
+        setOpenTopics((prev) => ({
+            ...prev,
+            [topicId]: !prev[topicId],
+        }))
+    }
     const handleCheckboxChange = (value) => {
         setSelectedSubtopics((prevCheckedValues) => {
             // If the checkbox is checked, add its value to the array
@@ -67,67 +76,150 @@ function TestToPdf(props) {
         generateAnswersPDF(testVariations);
     };
 
+    // const generateTestPDFs = (variations) => {
+    //     const urls = [];
+    //
+    //
+    //     variations.forEach((questions, index) => {
+    //         const doc = new jsPDF();
+    //         const pageWidth = doc.internal.pageSize.width - 20; // Page width with margin
+    //         const pageHeight = doc.internal.pageSize.height - 20; // Page height with margin
+    //         let y = 40; // Start after labels
+    //
+    //         doc.setFontSize(16);
+    //         doc.text(`Test Variant-${index + 1}`, 10, 10);
+    //         doc.setFontSize(12);
+    //         doc.text("F.I.SH: ______________________", 10, 20);
+    //         doc.text("Sinf: _______________________", 120, 20);
+    //
+    //         questions.forEach((q, i) => {
+    //             doc.setFontSize(14);
+    //             const questionText = `${i + 1}. ${q.question}`;
+    //             const questionLines = doc.splitTextToSize(questionText, pageWidth); // Wrap text
+    //             const questionHeight = questionLines.length * 7;
+    //
+    //             if (y + questionHeight > pageHeight) {
+    //                 doc.addPage();
+    //                 y = 20; // Reset Y for new page
+    //             }
+    //
+    //             doc.text(questionLines, 10, y);
+    //             y += questionHeight;
+    //
+    //             doc.setFontSize(12);
+    //             q.options.forEach((option, j) => {
+    //                 const optionText = `${String.fromCharCode(65 + j)}) ${option}`;
+    //                 const optionLines = doc.splitTextToSize(optionText, pageWidth - 10);
+    //                 const optionHeight = optionLines.length * 6;
+    //
+    //                 if (y + optionHeight > pageHeight) {
+    //                     doc.addPage();
+    //                     y = 20;
+    //                 }
+    //
+    //                 doc.text(optionLines, 15, y);
+    //                 y += optionHeight + 4;
+    //             });
+    //
+    //             y += 10;
+    //         });
+    //
+    //         // Add page numbers
+    //         const totalPages = doc.internal.getNumberOfPages();
+    //         for (let i = 1; i <= totalPages; i++) {
+    //             doc.setPage(i);
+    //             doc.text(`Sahifa ${i}/${totalPages}`, 10, pageHeight + 5);
+    //         }
+    //
+    //         const blob = doc.output("blob");
+    //         const url = URL.createObjectURL(blob);
+    //         urls.push({ url, name: `${index + 1}.pdf` });
+    //     });
+    //     setPdfUrls(urls);
+    // };
     const generateTestPDFs = (variations) => {
         const urls = [];
 
-
         variations.forEach((questions, index) => {
             const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.width - 20; // Page width with margin
-            const pageHeight = doc.internal.pageSize.height - 20; // Page height with margin
-            let y = 40; // Start after labels
+            const margin = 10;
+            const pageWidth = doc.internal.pageSize.width - 2 * margin;
+            const pageHeight = doc.internal.pageSize.height - 20;
+            const columnWidth = (pageWidth / 2) - 5; // Two columns with a gap
+            let yLeft = 40;
+            let yRight = 40;
+            let isLeftColumn = true;
 
             doc.setFontSize(16);
-            doc.text(`Test Variant-${index + 1}`, 10, 10);
+            doc.text(`Test Variant-${index + 1}`, margin, 10);
             doc.setFontSize(12);
-            doc.text("F.I.SH: ______________________", 10, 20);
-            doc.text("Sinf: _______________________", 120, 20);
+            doc.text("F.I.SH: ______________________", margin, 20);
+            doc.text("Sinf: _______________________", margin + 110, 20);
+            doc.text("Sana: _______________________", margin, 28)
 
             questions.forEach((q, i) => {
+                let x = isLeftColumn ? margin : margin + columnWidth + 10;
+                let y = isLeftColumn ? yLeft : yRight;
+
                 doc.setFontSize(14);
                 const questionText = `${i + 1}. ${q.question}`;
-                const questionLines = doc.splitTextToSize(questionText, pageWidth); // Wrap text
+                const questionLines = doc.splitTextToSize(questionText, columnWidth);
                 const questionHeight = questionLines.length * 7;
 
                 if (y + questionHeight > pageHeight) {
                     doc.addPage();
-                    y = 20; // Reset Y for new page
+                    yLeft = 20;
+                    yRight = 20;
+                    isLeftColumn = true;
+                    x = margin;
+                    y = yLeft;
                 }
 
-                doc.text(questionLines, 10, y);
+                doc.text(questionLines, x, y);
                 y += questionHeight;
 
                 doc.setFontSize(12);
                 q.options.forEach((option, j) => {
                     const optionText = `${String.fromCharCode(65 + j)}) ${option}`;
-                    const optionLines = doc.splitTextToSize(optionText, pageWidth - 10);
+                    const optionLines = doc.splitTextToSize(optionText, columnWidth - 5);
                     const optionHeight = optionLines.length * 6;
 
                     if (y + optionHeight > pageHeight) {
                         doc.addPage();
-                        y = 20;
+                        yLeft = 20;
+                        yRight = 20;
+                        isLeftColumn = true;
+                        x = margin;
+                        y = yLeft;
                     }
 
-                    doc.text(optionLines, 15, y);
+                    doc.text(optionLines, x + 5, y);
                     y += optionHeight + 4;
                 });
 
-                y += 10;
+                if (isLeftColumn) {
+                    yLeft = y + 10;
+                } else {
+                    yRight = y + 10;
+                }
+                isLeftColumn = !isLeftColumn;
             });
 
             // Add page numbers
             const totalPages = doc.internal.getNumberOfPages();
             for (let i = 1; i <= totalPages; i++) {
                 doc.setPage(i);
-                doc.text(`Sahifa ${i}/${totalPages}`, 10, pageHeight + 5);
+                doc.text(`Sahifa ${i}/${totalPages}`, margin, pageHeight + 5);
             }
 
             const blob = doc.output("blob");
             const url = URL.createObjectURL(blob);
             urls.push({ url, name: `${index + 1}.pdf` });
         });
+
         setPdfUrls(urls);
     };
+
 
     const generateAnswersPDF = (variations) => {
         const doc = new jsPDF();
@@ -189,28 +281,44 @@ function TestToPdf(props) {
         <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Test Generator</h1>
-                <Card className="bg-white shadow-lg rounded-lg overflow-hidden">
+                <Card className="bg-white shadow-lg rounded-lg overflow-hidden w-full">
                     <CardContent className="p-6">
-                        <form className="space-y-6">
+                        <form className="space-y-6 w-full">
                             <div>
                                 <Label className="block text-sm font-medium text-gray-700 mb-2">Mavzular</Label>
-                                <div
-                                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {database.flatMap((topic) => topic.subtopics).map((sub) => (
-                                        <div key={sub.subtopicname} className="flex items-center">
-                                            <Checkbox
-                                                id={sub.subtopicname}
-                                                checked={selectedSubtopics.includes(sub.subtopicname)}
-                                                onCheckedChange={() => handleCheckboxChange(sub.subtopicname)}
-                                            />
-                                            <Label
-                                                htmlFor={sub.subtopicname}
-                                                className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                            >
-                                                {sub.subtopicname}
-                                            </Label>
-                                        </div>
-                                    ))}
+                                <div className="w-full">
+                                    <Accordion type="multiple" className="space-y-4 w-full">
+                                        {database.map((topic) => (
+                                            <AccordionItem key={topic._id} value={topic._id} className="border rounded-lg overflow-hidden">
+                                                <AccordionTrigger className="px-4 py-3 bg-gray-50 hover:bg-gray-100 hover:no-underline">
+                                                    {topic.maintopicname}
+                                                </AccordionTrigger>
+                                                <AccordionContent className="p-4 bg-white">
+                                                    {topic.subtopics.length > 0 ? (
+                                                        <div className="space-y-2">
+                                                            {topic.subtopics.map((sub) => (
+                                                                <div key={sub._id} className="flex items-center">
+                                                                    <Checkbox
+                                                                        id={sub.subtopicname}
+                                                                        checked={selectedSubtopics.includes(sub.subtopicname)}
+                                                                        onCheckedChange={() => handleCheckboxChange(sub.subtopicname)}
+                                                                    />
+                                                                    <Label
+                                                                        htmlFor={sub.subtopicname}
+                                                                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                                    >
+                                                                        {sub.subtopicname}
+                                                                    </Label>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm text-gray-500">No subtopics available</p>
+                                                    )}
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
