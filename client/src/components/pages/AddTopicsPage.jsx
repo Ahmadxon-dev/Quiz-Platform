@@ -402,8 +402,50 @@ function QuestionsTab({database, setDatabase}) {
     const [option2, setOption2] = useState("")
     const [option3, setOption3] = useState("")
     const [option4, setOption4] = useState("")
+
+    // multer
+    const [questionText, setQuestionText] = useState('');
+    const [answerText, setAnswerText] = useState('');
+    const [optionsText, setOptionsText] = useState(['', '', '', '']);
+    const [questionImage, setQuestionImage] = useState(null);
+    const [answerImage, setAnswerImage] = useState(null);
+    const [optionImages, setOptionImages] = useState([null, null, null, null]);
+   // multer
+
     const [loadingforQuestionDelete, setLoadingforQuestionDelete] = useState({})
     const {toast} = useToast()
+    const handleSubmitWithImage = async (mainTopicId, subTopicName) => {
+        const formData = new FormData();
+        formData.append('question', questionText);
+        formData.append('answerText', answerText);
+        formData.append('mainTopicId', mainTopicId);
+        formData.append('subTopicName', subTopicName);
+        optionsText.forEach((option, idx) => formData.append('optionsText[]', option));
+
+        if (questionImage) formData.append('questionImage', questionImage);
+        if (answerImage) formData.append('answerImage', answerImage);
+        optionImages.forEach((image, idx) => {
+            if (image) formData.append('optionImages', image);
+        });
+
+        try {
+            await fetch(`${import.meta.env.VITE_SERVER}/test/add-question`, {
+                method:"POST",
+                body:formData,
+            })
+                .then(res=>res.json())
+                .then(data=>{
+                    setDatabase(data.newData)
+                    toast({
+                        title: data.msg,
+                        variant: "success",
+                        duration: 4000,
+                    })
+                })
+        } catch (err) {
+            console.error('Error adding question:', err);
+        }
+    };
     const createQuestion = async (mainTopicId, subTopicName)=>{
         if (questionAnswer === "" || question === "" || option2 === "" || option1 === "" || option3 === "" || option4=== "") {
             toast({
@@ -524,7 +566,9 @@ function QuestionsTab({database, setDatabase}) {
                                                 {subtopic.questions.map((question, questionIndex) => (
                                                     <li key={question.questionId} className="p-2 bg-gray-100 rounded">
                                                         <p className="font-medium">{question.question}</p>
+                                                        {question.questionImage && <img src={question.questionImage} alt="test" className={`w-20 h-20`}/>}
                                                         <p className="text-sm text-gray-600">Javob: {question.answer}</p>
+                                                        {question.answerImage && <img src={question.answerImage} alt="test" className={`w-20 h-20`}/>}
 
                                                         <Dialog>
                                                             <DialogTrigger asChild>
@@ -606,11 +650,35 @@ function QuestionsTab({database, setDatabase}) {
                                                 ))}
                                             </ul>
                                             <div className="mt-2">
+                                                <div>
+                                                    <input type="text" placeholder="Question text" value={questionText} onChange={e => setQuestionText(e.target.value)} required />
+                                                    <input type="file" onChange={e => setQuestionImage(e.target.files[0])} />
+                                                    <input type="text" placeholder="Answer text" value={answerText} onChange={e => setAnswerText(e.target.value)} required />
+                                                    <input type="file" onChange={e => setAnswerImage(e.target.files[0])} />
+
+                                                    {optionsText.map((option, idx) => (
+                                                        <div key={idx}>
+                                                            <input type="text" placeholder={`Option ${idx + 1}`} value={option} onChange={e => {
+                                                                const newOptions = [...optionsText];
+                                                                newOptions[idx] = e.target.value;
+                                                                setOptionsText(newOptions);
+                                                            }} />
+                                                            <input type="file" onChange={e => {
+                                                                const newOptionImages = [...optionImages];
+                                                                newOptionImages[idx] = e.target.files[0];
+                                                                setOptionImages(newOptionImages);
+                                                            }} />
+                                                        </div>
+                                                    ))}
+
+                                                    <button type="submit" onClick={()=>handleSubmitWithImage(topic._id, subtopic.subtopicname)}>Add Question</button>
+                                                </div>
                                                 <Dialog>
                                                     <DialogTrigger asChild>
                                                         <Button variant="outline">
                                                             <Plus className="mr-2 h-4 w-4"/> Savol Qo'shish
                                                         </Button>
+
                                                     </DialogTrigger>
                                                     <DialogContent className="sm:max-w-[425px]">
                                                         <DialogHeader>

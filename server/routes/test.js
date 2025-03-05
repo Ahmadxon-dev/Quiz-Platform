@@ -4,6 +4,8 @@ const Test = require("../models/Test")
 const TopicAndQuestion = require("../models/TopicAndQuestion")
 const {all} = require("express/lib/application");
 const mongoose = require("mongoose");
+const upload = require("../middleware/upload")
+const cloudinary = require('cloudinary').v2;
 //start
 
 router.get("/getfulltestdb", async (req,res)=>{
@@ -228,4 +230,64 @@ router.put("/questions/edit", async (req,res)=>{
     const newData = await TopicAndQuestion.find()
     return res.status(200).json({msg: "Savol muvaffaqiyatli o'zgartirildi", newData})
 })
+
+// multer file
+router.post('/add-question', upload, async (req, res) => {
+    try {
+        const { question, answerText, optionsText, mainTopicId, subTopicName} = req.body;
+
+
+
+        // Upload images to Cloudinary
+        const uploadToCloudinary = (imageBuffer, imageName) => {
+            return new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream(
+                    { resource_type: 'auto', public_id: imageName, folder: 'quiz-platform', quality:50, fetch_format: 'auto' },
+                    (error, result) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(result.secure_url); // Return the Cloudinary URL
+                        }
+                    }
+                ).end(imageBuffer); // Pass the image buffer directly to Cloudinary
+            });
+        };
+        // Collect image files (in memory)
+        const questionImage = req.files['questionImage'] ? req.files['questionImage'][0] : null;
+        const answerImage = req.files['answerImage'] ? req.files['answerImage'][0] : null;
+        const optionImages = req.files['optionImages'] ? req.files['optionImages'] : [];
+
+        const questionImageUrl = questionImage ? await uploadToCloudinary(questionImage.buffer, `question_${Date.now()}`) : null;
+        const answerImageUrl = answerImage ? await uploadToCloudinary(answerImage.buffer, `answer_${Date.now()}`) : null;
+        const optionImageUrls = await Promise.all(
+            optionImages.map((file, index) => uploadToCloudinary(file.buffer, `option_${Date.now()}_${index}`))
+        );
+        await TopicAndQuestion.findOneAndUpdate(
+            { _id: mainTopicId, "subtopics.subtopicname": subTopicName },
+            {
+                $push: {
+                    "subtopics.$.questions": {
+                        questionId: new mongoose.Types.ObjectId(),
+                        question: question,
+                        questionImage: questionImageUrl,
+                        answer: answerText,
+                        answerImage: answerImageUrl,
+                        options: optionsText.map((text, index) => ({
+                            text: text,
+                            image: optionImageUrls[index] || null,
+                        })),
+                    }
+                }
+            },
+            { new: true }
+        )
+        const newData = await TopicAndQuestion.find()
+        return res.status(200).json({msg: "Muvaffaqiyatli yaratildi", newData})
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Error adding question', error: err });
+    }
+});
+
 module.exports = router
