@@ -6,6 +6,7 @@ const {all} = require("express/lib/application");
 const mongoose = require("mongoose");
 const upload = require("../middleware/upload")
 const cloudinary = require('cloudinary').v2;
+const { v4: uuidv4 } = require('uuid');
 //start
 
 router.get("/getfulltestdb", async (req,res)=>{
@@ -13,34 +14,58 @@ router.get("/getfulltestdb", async (req,res)=>{
     return res.json(data)
 })
 router.post("/start", async (req,res)=>{
-    const {time, subtopicnamesArray, userEmail, userId, numberOfQuestions } = req.body
+    const { time, subtopicnamesArray, userEmail, userId, numberOfQuestions } = req.body;
+
+    // Find the topic that contains the given subtopics
     const topic = await TopicAndQuestion.findOne({
         "subtopics.subtopicname": { $in: subtopicnamesArray },
     });
-    if (!topic){
-        return res.status(400).json({error: "Subtopic not found"})
+    if (!topic) {
+        return res.status(400).json({ error: "Subtopic not found" });
     }
-    let allQuestions = []
-    topic.subtopics?.forEach(subtopic=>{
-        subtopic.questions.forEach(question=>allQuestions.push(question))
-    })
-    if (allQuestions.length<numberOfQuestions){
-        return res.status(400).json({ error: `Tanlangan savollar soni, savollardan ko'p.`, additional:`Barcha savollar: ${allQuestions.length}ta` });
 
+    let allQuestions = [];
+    topic.subtopics?.forEach(subtopic => {
+        if (subtopicnamesArray.includes(subtopic.subtopicname)) {
+            allQuestions.push(...subtopic.questions);
+        }
+    });
+    if (allQuestions.length < numberOfQuestions) {
+        return res.status(400).json({
+            error: `Tanlangan savollar soni, savollardan ko'p.`,
+            additional: `Barcha savollar: ${allQuestions.length}ta`
+        });
     }
-    const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random()); // Shuffle array
-    const selectedQuestions = shuffledQuestions.slice(0, numberOfQuestions || allQuestions.length); // Limit questions
+    //
+    // // Shuffle and select the required number of questions
+    const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random());
+    const selectedQuestions = shuffledQuestions.slice(0, numberOfQuestions || allQuestions.length).map(question => ({
+            questionText: question.questionText,
+            questionImage: question.questionImage || null,
+            options: {
+                option1: { text: question.options.option1.text, image: question.options.option1.image || null },
+                option2: { text: question.options.option2.text, image: question.options.option2.image || null },
+                option3: { text: question.options.option3.text, image: question.options.option3.image || null },
+                option4: { text: question.options.option4.text, image: question.options.option4.image || null }
+            },
+            selectedAnswer: "", // Initially empty, user will select later
+            correctAnswer: question.answer // Assign the correct answer
+        }));
     const newTest = new Test({
         subtopicname: subtopicnamesArray,
-        questions:selectedQuestions,
+        questions: selectedQuestions,
         startTime: new Date(),
-        remainingTime: time, // Example: 1 hour
+        remainingTime: time, // Time in seconds
         isCompleted: false,
+        result: 0, // Initially 0
         userEmail,
         userId
-    })
-    await newTest.save()
-    return res.status(200).json({msg:"test created", testId:newTest._id, newTest})
+    });
+
+    await newTest.save();
+    return res.status(200).json({ msg: "Test created", testId: newTest._id, newTest });
+
+
 })
 router.get("/all-results", async (req,res)=>{
     const test = await Test.find().populate('userId')
@@ -68,7 +93,7 @@ router.put("/submit/:testId", async (req,res)=>{
     let score = 0
     const questionsNumber = test.questions.length
     for (let i = 0; i < questionsNumber; i++) {
-        if (test.questions[i].answer === test.questions[i].selectedAnswer){
+        if (test.questions[i].correctAnswer === test.questions[i].selectedAnswer){
             score+=1
         }
     }
@@ -168,33 +193,14 @@ router.put("/subtopics/edit", async (req,res)=>{
     return res.status(200).json({msg: "Mavzu muvaffaqiyatli o'zgartirildi", newData})
 })
 
-router.post("/questions/add", async (req,res)=>{
-    const {mainTopicId, subTopicName, question, answer, options} = req.body
-    await TopicAndQuestion.findOneAndUpdate(
-        { _id: mainTopicId, "subtopics.subtopicname": subTopicName },
-        {
-            $push: {
-                "subtopics.$.questions": {
-                    questionId: new mongoose.Types.ObjectId(),
-                    question,
-                    answer,
-                    options
-                }
-            }
-        },
-        { new: true }
-    )
-    const newData = await TopicAndQuestion.find()
-    return res.status(200).json({msg: "Yangi savol muvaffaqiyatli qo'shildi", newData})
-})
+
 router.delete("/questions/delete", async (req,res)=>{
     const { mainTopicId, subTopicName, questionId } = req.body;
-
     await TopicAndQuestion.findOneAndUpdate(
         { _id: mainTopicId, "subtopics.subtopicname": subTopicName },
         {
             $pull: {
-                "subtopics.$[subtopic].questions": { questionId: new mongoose.Types.ObjectId(questionId) }
+                "subtopics.$[subtopic].questions": { questionId}
             }
         },
         {
@@ -206,38 +212,10 @@ router.delete("/questions/delete", async (req,res)=>{
     const newData = await TopicAndQuestion.find()
     return res.status(200).json({msg: "Savol muvaffaqiyatli o'chirildi", newData})
 })
-router.put("/questions/edit", async (req,res)=>{
-    const {mainTopicId, subTopicName, questionId, newQuestion, options, answer} = req.body
-
-    await TopicAndQuestion.findOneAndUpdate(
-        { _id: mainTopicId, "subtopics.subtopicname": subTopicName, "subtopics.questions.questionId": questionId },
-        {
-            $set: {
-                "subtopics.$[subtopic].questions.$[question].question": newQuestion,
-                "subtopics.$[subtopic].questions.$[question].options": options,
-                "subtopics.$[subtopic].questions.$[question].answer": answer
-            }
-        },
-        {
-            new: true,
-            arrayFilters: [
-                { "subtopic.subtopicname": subTopicName },
-                { "question.questionId": new mongoose.Types.ObjectId(questionId) }
-            ]
-        }
-    );
-
-    const newData = await TopicAndQuestion.find()
-    return res.status(200).json({msg: "Savol muvaffaqiyatli o'zgartirildi", newData})
-})
-
 // multer file
-router.post('/add-question', upload, async (req, res) => {
+router.post('/questions/add', upload, async (req, res) => {
     try {
-        const { question, answerText, optionsText, mainTopicId, subTopicName} = req.body;
-
-
-
+        const { questionText, answer, optionsText, mainTopicId, subTopicName} = req.body;
         // Upload images to Cloudinary
         const uploadToCloudinary = (imageBuffer, imageName) => {
             return new Promise((resolve, reject) => {
@@ -263,20 +241,23 @@ router.post('/add-question', upload, async (req, res) => {
         const optionImageUrls = await Promise.all(
             optionImages.map((file, index) => uploadToCloudinary(file.buffer, `option_${Date.now()}_${index}`))
         );
+        const options = {
+            option1: { text: optionsText[0] || '', image: optionImageUrls[0] || null },
+            option2: { text: optionsText[1] || '', image: optionImageUrls[1] || null },
+            option3: { text: optionsText[2] || '', image: optionImageUrls[2] || null },
+            option4: { text: optionsText[3] || '', image: optionImageUrls[3] || null }
+        };
         await TopicAndQuestion.findOneAndUpdate(
             { _id: mainTopicId, "subtopics.subtopicname": subTopicName },
             {
                 $push: {
                     "subtopics.$.questions": {
-                        questionId: new mongoose.Types.ObjectId(),
-                        question: question,
+                        questionId: uuidv4(),
+                        questionText: questionText,
                         questionImage: questionImageUrl,
-                        answer: answerText,
-                        answerImage: answerImageUrl,
-                        options: optionsText.map((text, index) => ({
-                            text: text,
-                            image: optionImageUrls[index] || null,
-                        })),
+                        answer,
+                        // answerImage: answerImageUrl,
+                        options:options
                     }
                 }
             },
@@ -285,7 +266,6 @@ router.post('/add-question', upload, async (req, res) => {
         const newData = await TopicAndQuestion.find()
         return res.status(200).json({msg: "Muvaffaqiyatli yaratildi", newData})
     } catch (err) {
-        console.error(err);
         res.status(500).json({ message: 'Error adding question', error: err });
     }
 });

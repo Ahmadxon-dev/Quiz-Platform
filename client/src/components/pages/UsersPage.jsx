@@ -184,7 +184,7 @@ function UsersPage(props) {
                                                         <Trash className=" h-4 w-4"/>
                                                     </Button>
                                                     {
-                                                        (role === "bosh admin" || "admin") && (<DropdownMenu>
+                                                        (role === "bosh admin") && (<DropdownMenu>
                                                             <DropdownMenuTrigger>
                                                                 <Button size={"icon"} variant={"outline"}>
                                                                     <EllipsisVertical className={`h-7 w-7`}/>

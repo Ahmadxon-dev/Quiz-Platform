@@ -14,9 +14,11 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion"
-import {Plus, Edit, Trash2, Loader2} from "lucide-react"
+import {Plus, Edit, Trash2, Loader2, X, Image} from "lucide-react"
 import {useToast} from "@/hooks/use-toast.js";
-
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.jsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.jsx";
+import {Label} from "@/components/ui/label.jsx";
 
 
 function AddTopicsPage(props) {
@@ -395,135 +397,155 @@ function SubtopicsTab({database, setDatabase}) {
     )
 }
 
+function MathSymbolsToolbar({onInsertSymbol}) {
+    const symbols = {
+        Asosiy: [
+            {symbol: "π", label: "Pi"},
+            {symbol: "±", label: "Plus-minus"},
+            {symbol: "×", label: "Multiply"},
+            {symbol: "÷", label: "Divide"},
+            {symbol: "=", label: "Equals"},
+            {symbol: "≠", label: "Not equals"},
+            {symbol: "≈", label: "Approximately"},
+            {symbol: "∞", label: "Infinity"},
+        ],
+        Funksiyalar: [
+            {symbol: "sin()", label: "Sine"},
+            {symbol: "cos()", label: "Cosine"},
+            {symbol: "tan()", label: "Tangent"},
+            {symbol: "log()", label: "Logarithm"},
+            {symbol: "ln()", label: "Natural log"},
+            {symbol: "√()", label: "Square root"},
+            {symbol: "∛()", label: "Cube root"},
+        ],
+        Operatorlar: [
+            {symbol: "^", label: "Power"},
+            {symbol: "∑", label: "Sum"},
+            {symbol: "∏", label: "Product"},
+            {symbol: "∫", label: "Integral"},
+            {symbol: "∂", label: "Partial"},
+            {symbol: "∇", label: "Nabla"},
+            {symbol: "Δ", label: "Delta"},
+        ],
+        Taqqoslash: [
+            {symbol: "<", label: "Less than"},
+            {symbol: ">", label: "Greater than"},
+            {symbol: "≤", label: "Less or equal"},
+            {symbol: "≥", label: "Greater or equal"},
+            {symbol: "∈", label: "Element of"},
+            {symbol: "⊂", label: "Subset"},
+            {symbol: "⊆", label: "Subset or equal"},
+        ],
+        Kasrlar: [
+            {symbol: "½", label: "1/2"},
+            {symbol: "⅓", label: "1/3"},
+            {symbol: "¼", label: "1/4"},
+            {symbol: "⅕", label: "1/5"},
+            {symbol: "⅙", label: "1/6"},
+            {symbol: "⅛", label: "1/8"},
+            {symbol: "a/b", label: "Ixtiyoriy kasr"},
+        ],
+    }
+
+    const [activeCategory, setActiveCategory] = useState("Asosiy")
+
+    return (
+        <div className="border rounded-md p-2 bg-gray-50">
+            <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
+                {Object.keys(symbols).map((category) => (
+                    <Button
+                        key={category}
+                        variant={activeCategory === category ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveCategory(category)}
+                        className="whitespace-nowrap"
+                    >
+                        {category}
+                    </Button>
+                ))}
+            </div>
+            <div className="flex flex-wrap gap-1">
+                {symbols[activeCategory].map((item) => (
+                    <Button
+                        key={item.symbol}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onInsertSymbol(item.symbol)}
+                        title={item.label}
+                        className="min-w-8 h-8 px-2"
+                    >
+                        {item.symbol}
+                    </Button>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 function QuestionsTab({database, setDatabase}) {
-    const [questionAnswer, setQuestionAnswer] = useState("")
-    const [question, setQuestion] = useState("")
-    const [option1, setOption1] = useState("")
-    const [option2, setOption2] = useState("")
-    const [option3, setOption3] = useState("")
-    const [option4, setOption4] = useState("")
 
     // multer
     const [questionText, setQuestionText] = useState('');
-    const [answerText, setAnswerText] = useState('');
+    const [answer, setAnswerText] = useState('');
     const [optionsText, setOptionsText] = useState(['', '', '', '']);
     const [questionImage, setQuestionImage] = useState(null);
-    const [answerImage, setAnswerImage] = useState(null);
     const [optionImages, setOptionImages] = useState([null, null, null, null]);
-   // multer
+    const [questionImageLink, setQuestionImageLink] = useState(null)
 
+    // multer
+    const [isAddingQuestion, setIsAddingQuestion] = useState(false)
     const [loadingforQuestionDelete, setLoadingforQuestionDelete] = useState({})
+    const [loadingForQuestionsAdd, setLoadingForQuestionsAdd] = useState(false)
     const {toast} = useToast()
     const handleSubmitWithImage = async (mainTopicId, subTopicName) => {
+        setLoadingForQuestionsAdd(true)
+        if (questionText === "" || answer === "" || optionsText.every(option => option === "")) {
+            toast({
+                title: "Barcha maydonlarni to'ldiring",
+                variant: "destructive",
+                duration: 4000,
+            })
+            setLoadingForQuestionsAdd(false)
+            return
+        }
         const formData = new FormData();
-        formData.append('question', questionText);
-        formData.append('answerText', answerText);
+        formData.append('questionText', questionText);
+        formData.append('answer', answer);
         formData.append('mainTopicId', mainTopicId);
         formData.append('subTopicName', subTopicName);
         optionsText.forEach((option, idx) => formData.append('optionsText[]', option));
 
         if (questionImage) formData.append('questionImage', questionImage);
-        if (answerImage) formData.append('answerImage', answerImage);
+        // if (answerImage) formData.append('answerImage', answerImage);
         optionImages.forEach((image, idx) => {
             if (image) formData.append('optionImages', image);
         });
 
         try {
-            await fetch(`${import.meta.env.VITE_SERVER}/test/add-question`, {
-                method:"POST",
-                body:formData,
+            await fetch(`${import.meta.env.VITE_SERVER}/test/questions/add`, {
+                method: "POST",
+                body: formData,
             })
-                .then(res=>res.json())
-                .then(data=>{
+                .then(res => res.json())
+                .then(data => {
                     setDatabase(data.newData)
+                    setLoadingForQuestionsAdd(false)
+                    setQuestionText('')
+                    setAnswerText('')
+                    setOptionsText(['', '', '', '']);
+                    setQuestionImage(null)
+                    setOptionImages([null, null, null, null]);
                     toast({
                         title: data.msg,
                         variant: "success",
                         duration: 4000,
                     })
+
                 })
         } catch (err) {
             console.error('Error adding question:', err);
         }
     };
-    const createQuestion = async (mainTopicId, subTopicName)=>{
-        if (questionAnswer === "" || question === "" || option2 === "" || option1 === "" || option3 === "" || option4=== "") {
-            toast({
-                title: "Barcha maydonlarni to'ldiring",
-                variant: "destructive",
-                duration: 4000,
-            })
-            return
-        }
-        await fetch(`${import.meta.env.VITE_SERVER}/test/questions/add`, {
-            method: "post",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                mainTopicId,
-                subTopicName,
-                question:question,
-                answer:questionAnswer,
-                options: [option1, option2, option3, option4]
-            })
-        })
-            .then(res => res.json())
-            .then(data => {
-                setDatabase(data.newData)
-                toast({
-                    title: data.msg,
-                    variant: "success",
-                    duration: 4000,
-                })
-                setQuestion("")
-                setQuestionAnswer("")
-                setOption1("")
-                setOption2("")
-                setOption3("")
-                setOption4("")
-            })
-    }
-
-    const updateQuestion = async (mainTopicId, subTopicName, questionId) =>{
-        if (question === "" || questionAnswer === "" || option4 === "" || option3 === "" || option2 === "" || option1 === "" ){
-            toast({
-                title: "Barcha maydonlarni to'ldiring",
-                variant: "destructive",
-                duration: 4000,
-            })
-            return
-        }
-        await fetch(`${import.meta.env.VITE_SERVER}/test/questions/edit`, {
-            method: "put",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                mainTopicId,
-                subTopicName,
-                questionId,
-                newQuestion: question,
-                answer:questionAnswer,
-                options: [option1, option2, option3, option4]
-            })
-        })
-            .then(res => res.json())
-            .then(data => {
-                setDatabase(data.newData)
-                toast({
-                    title: data.msg,
-                    variant: "success",
-                    duration: 4000,
-                })
-                setQuestion("")
-                setQuestionAnswer("")
-                setOption1("")
-                setOption2("")
-                setOption3("")
-                setOption4("")
-            })
-    }
     const deleteQuestion = async (mainTopicId, subTopicName, questionId) => {
         setLoadingforQuestionDelete((prev) => ({...prev, [questionId]: true}));
         await fetch(`${import.meta.env.VITE_SERVER}/test/questions/delete`, {
@@ -548,7 +570,60 @@ function QuestionsTab({database, setDatabase}) {
                 setLoadingforQuestionDelete((prev) => ({...prev, [questionId]: false}));
             })
     }
+    const insertSymbolInQuestion = (symbol) => {
+        const textarea = document.getElementById("questionTextArea")
+        if (!textarea) return
 
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+        const text = textarea.value
+        const before = text.substring(0, start)
+        const after = text.substring(end)
+
+        // For functions that end with (), place the cursor inside the parentheses
+        let cursorPosition = start + symbol.length
+        if (symbol.endsWith("()")) {
+            cursorPosition = start + symbol.length - 1
+        }
+
+        // Set the new text
+        const newText = before + symbol + after
+        setQuestionText(newText)
+
+        // Need to wait for React to update the DOM before setting selection
+        setTimeout(() => {
+            textarea.focus()
+            textarea.setSelectionRange(cursorPosition, cursorPosition)
+        }, 0)
+    }
+
+    const insertSymbolInOption = (symbol, index) => {
+        const input = document.getElementById(`optionInput-${index}`)
+        if (!input) return
+
+        const start = input.selectionStart
+        const end = input.selectionEnd
+        const text = input.value
+        const before = text.substring(0, start)
+        const after = text.substring(end)
+
+        // For functions that end with (), place the cursor inside the parentheses
+        let cursorPosition = start + symbol.length
+        if (symbol.endsWith("()")) {
+            cursorPosition = start + symbol.length - 1
+        }
+
+        // Update the option text
+        const newOptionsText = [...optionsText]
+        newOptionsText[index] = before + symbol + after
+        setOptionsText(newOptionsText)
+
+        // Need to wait for React to update the DOM before setting selection
+        setTimeout(() => {
+            input.focus()
+            input.setSelectionRange(cursorPosition, cursorPosition)
+        }, 0)
+    }
     return (
         <div>
             <h2 className="text-2xl font-semibold mb-4">Savollar</h2>
@@ -559,171 +634,217 @@ function QuestionsTab({database, setDatabase}) {
                         <AccordionContent>
                             <Accordion type="single" collapsible className="w-full">
                                 {topic.subtopics.map((subtopic, subtopicIndex) => (
-                                    <AccordionItem key={subtopic.subtopicname} value={`subitem-${topicIndex}-${subtopicIndex}`}>
+                                    <AccordionItem key={subtopic.subtopicname}
+                                                   value={`subitem-${topicIndex}-${subtopicIndex}`}>
                                         <AccordionTrigger>{subtopic.subtopicname}</AccordionTrigger>
                                         <AccordionContent>
-                                            <ul className="space-y-2">
+                                            <ul className="space-y-4">
                                                 {subtopic.questions.map((question, questionIndex) => (
-                                                    <li key={question.questionId} className="p-2 bg-gray-100 rounded">
-                                                        <p className="font-medium">{question.question}</p>
-                                                        {question.questionImage && <img src={question.questionImage} alt="test" className={`w-20 h-20`}/>}
-                                                        <p className="text-sm text-gray-600">Javob: {question.answer}</p>
-                                                        {question.answerImage && <img src={question.answerImage} alt="test" className={`w-20 h-20`}/>}
-
-                                                        <Dialog>
-                                                            <DialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={()=>{
-                                                                        setQuestion(question.question)
-                                                                        setQuestionAnswer(question.answer)
-                                                                        setOption1(question.options[0])
-                                                                        setOption2(question.options[1])
-                                                                        setOption3(question.options[2])
-                                                                        setOption4(question.options[3])
-                                                                    }}
-                                                                >
-                                                                    <Edit className="h-4 w-4"/>
-                                                                </Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent className="sm:max-w-[425px]">
-                                                                <DialogHeader>
-                                                                    <DialogTitle>Savolni o'zgartirish</DialogTitle>
-
-                                                                </DialogHeader>
-                                                                <div className="grid gap-4 py-4">
-                                                                    <Textarea placeholder="Savol"
-                                                                              id={`new-question-${topicIndex}-${subtopicIndex}`}
-                                                                              defaultValue={question.question}
-                                                                              onChange={e=>setQuestion(e.target.value)}
-                                                                    />
-                                                                    <Input placeholder="To'g'ri javob"
-                                                                           id={`new-answer-${topicIndex}-${subtopicIndex}`}
-                                                                           defaultValue={questionAnswer}
-                                                                           onChange={e=>setQuestionAnswer(e.target.value)}
-                                                                    />
-                                                                    <Input placeholder="Variant 1"
-                                                                           id={`new-option1-${topicIndex}-${subtopicIndex}`}
-                                                                           defaultValue={question.options[0]}
-                                                                           onChange={e=>setOption1(e.target.value)}
-                                                                    />
-                                                                    <Input placeholder="Variant 2"
-                                                                           id={`new-option2-${topicIndex}-${subtopicIndex}`}
-                                                                           defaultValue={question.options[1]}
-                                                                           onChange={e=>setOption2(e.target.value)}
-                                                                    />
-                                                                    <Input placeholder="Variant 3"
-                                                                           id={`new-option3-${topicIndex}-${subtopicIndex}`}
-                                                                           defaultValue={question.options[2]}
-                                                                           onChange={e=>setOption3(e.target.value)}
-                                                                    />
-                                                                    <Input placeholder="Variant 4"
-                                                                           id={`new-option4-${topicIndex}-${subtopicIndex}`}
-                                                                           defaultValue={question.options[3]}
-                                                                           onChange={e=>setOption4(e.target.value)}
-                                                                    />
+                                                    <Card key={questionIndex}>
+                                                        <CardHeader>
+                                                            <CardTitle className="flex justify-between">
+                                                                <span>Savol {questionIndex + 1}</span>
+                                                                <div>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() =>
+                                                                            deleteQuestion(topic._id, subtopic.subtopicname, question.questionId)
+                                                                        }
+                                                                        disabled={loadingforQuestionDelete[question.questionId]}
+                                                                    >
+                                                                        {loadingforQuestionDelete[question.questionId] ? (
+                                                                            <Loader2
+                                                                                className="ml-2 h-4 w-4 animate-spin"/>
+                                                                        ) : (
+                                                                            <Trash2 className="h-4 w-4"/>
+                                                                        )}
+                                                                    </Button>
                                                                 </div>
-                                                                <DialogFooter>
-                                                                    <DialogClose asChild>
-                                                                        <Button
-                                                                            type="submit"
-                                                                            onClick={()=> updateQuestion(topic._id, subtopic.subtopicname, question.questionId)}
-                                                                        >
-                                                                            O'zgartirish
-                                                                        </Button>
-                                                                    </DialogClose>
-                                                                </DialogFooter>
-                                                            </DialogContent>
-                                                        </Dialog>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={()=>deleteQuestion(topic._id, subtopic.subtopicname, question.questionId)}
-                                                            disabled={loadingforQuestionDelete[question.questionId]}
-                                                        >
-                                                            {loadingforQuestionDelete[question.questionId] ?
-                                                                <Loader2 className="ml-2 h-4 w-4 animate-spin"/> :
-                                                                <Trash2 className="h-4 w-4"/>}
-                                                        </Button>
-                                                    </li>
+                                                            </CardTitle>
+                                                        </CardHeader>
+                                                        <CardContent>
+                                                            <div className="space-y-4">
+                                                                <div>
+                                                                    <h4 className="font-medium">Savol:</h4>
+                                                                    <p>{question.questionText}</p>
+                                                                    {question.questionImage && (
+                                                                        <div className="mt-2">
+                                                                            <img
+                                                                                src={question.questionImage || "/placeholder.svg"}
+                                                                                alt="Question"
+                                                                                className="max-h-40 rounded-md border"
+                                                                            />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                <div>
+                                                                    <h4 className="font-medium mb-2">Variantlar:</h4>
+                                                                    <div
+                                                                        className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                        {Object.entries(question.options).map(([key, option]) => (
+                                                                            <div
+                                                                                key={key}
+                                                                                className={`p-2 rounded-md border ${question.answer === key ? "border-green-500 bg-green-50" : ""}`}
+                                                                            >
+                                                                                <div
+                                                                                    className="flex items-center gap-2">
+                                          <span className="font-medium">
+                                            {key === "option1"
+                                                ? "A"
+                                                : key === "option2"
+                                                    ? "B"
+                                                    : key === "option3"
+                                                        ? "C"
+                                                        : "D"}
+                                              :
+                                          </span>
+                                                                                    <span>{option.text}</span>
+                                                                                </div>
+                                                                                {option.image && (
+                                                                                    <div className="mt-2">
+                                                                                        <img
+                                                                                            src={option.image || "/placeholder.svg"}
+                                                                                            alt={`Option ${key}`}
+                                                                                            className="max-h-24 rounded-md border"
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className={`flex gap-3`}>
+                                                                    <h4 className="font-medium">To'g'ri Javob:</h4>
+                                                                    <p>
+                                                                        {question.answer === "option1"
+                                                                            ? "A"
+                                                                            : question.answer === "option2"
+                                                                                ? "B"
+                                                                                : question.answer === "option3"
+                                                                                    ? "C"
+                                                                                    : "D"}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
                                                 ))}
                                             </ul>
                                             <div className="mt-2">
-                                                <div>
-                                                    <input type="text" placeholder="Question text" value={questionText} onChange={e => setQuestionText(e.target.value)} required />
-                                                    <input type="file" onChange={e => setQuestionImage(e.target.files[0])} />
-                                                    <input type="text" placeholder="Answer text" value={answerText} onChange={e => setAnswerText(e.target.value)} required />
-                                                    <input type="file" onChange={e => setAnswerImage(e.target.files[0])} />
-
-                                                    {optionsText.map((option, idx) => (
-                                                        <div key={idx}>
-                                                            <input type="text" placeholder={`Option ${idx + 1}`} value={option} onChange={e => {
-                                                                const newOptions = [...optionsText];
-                                                                newOptions[idx] = e.target.value;
-                                                                setOptionsText(newOptions);
-                                                            }} />
-                                                            <input type="file" onChange={e => {
-                                                                const newOptionImages = [...optionImages];
-                                                                newOptionImages[idx] = e.target.files[0];
-                                                                setOptionImages(newOptionImages);
-                                                            }} />
-                                                        </div>
-                                                    ))}
-
-                                                    <button type="submit" onClick={()=>handleSubmitWithImage(topic._id, subtopic.subtopicname)}>Add Question</button>
-                                                </div>
-                                                <Dialog>
+                                                <Dialog open={isAddingQuestion} onOpenChange={setIsAddingQuestion}>
                                                     <DialogTrigger asChild>
-                                                        <Button variant="outline">
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                setQuestionText("")
+                                                                setAnswerText("")
+                                                                setOptionsText(["", "", "", ""])
+                                                                setQuestionImage(null)
+                                                                setOptionImages([null, null, null, null])
+                                                            }}
+                                                        >
                                                             <Plus className="mr-2 h-4 w-4"/> Savol Qo'shish
                                                         </Button>
-
                                                     </DialogTrigger>
-                                                    <DialogContent className="sm:max-w-[425px]">
+                                                    <DialogContent className="max-w-3xl  max-h-[90vh] overflow-y-auto">
                                                         <DialogHeader>
-                                                            <DialogTitle>Yangi savol qo'shish</DialogTitle>
-
+                                                            <DialogTitle>Yangi Savol Qo'shish</DialogTitle>
                                                         </DialogHeader>
-                                                        <div className="grid gap-4 py-4">
-                                                            <Textarea placeholder="Savol"
-                                                                      id={`new-question-${topicIndex}-${subtopicIndex}`}
-                                                                      value={question}
-                                                                      onChange={e=>setQuestion(e.target.value)}
-                                                            />
-                                                            <Input placeholder="To'g'ri javob"
-                                                                   id={`new-answer-${topicIndex}-${subtopicIndex}`}
-                                                                   value={questionAnswer}
-                                                                   onChange={e=>setQuestionAnswer(e.target.value)}
-                                                            />
-                                                            <Input placeholder="Variant 1"
-                                                                   id={`new-option1-${topicIndex}-${subtopicIndex}`}
-                                                                    value={option1}
-                                                                   onChange={e=>setOption1(e.target.value)}
-                                                            />
-                                                            <Input placeholder="Variant 2"
-                                                                   id={`new-option2-${topicIndex}-${subtopicIndex}`}
-                                                                   value={option2}
-                                                                   onChange={e=>setOption2(e.target.value)}
-                                                            />
-                                                            <Input placeholder="Variant 3"
-                                                                   id={`new-option3-${topicIndex}-${subtopicIndex}`}
-                                                                   value={option3}
-                                                                   onChange={e=>setOption3(e.target.value)}
-                                                            />
-                                                            <Input placeholder="Variant 4"
-                                                                   id={`new-option4-${topicIndex}-${subtopicIndex}`}
-                                                                   value={option4}
-                                                                   onChange={e=>setOption4(e.target.value)}
-                                                            />
+
+                                                        <div className="grid gap-6 py-4">
+                                                            <div className="space-y-2">
+                                                                <Label htmlFor="questionTextArea">Savol Matni</Label>
+                                                                <MathSymbolsToolbar
+                                                                    onInsertSymbol={insertSymbolInQuestion}/>
+                                                                <Textarea
+                                                                    id="questionTextArea"
+                                                                    placeholder="Matn kiriting"
+                                                                    value={questionText}
+                                                                    onChange={(e) => setQuestionText(e.target.value)}
+                                                                    required
+                                                                />
+                                                            </div>
+
+                                                            <div className="space-y-2">
+                                                                <Label>Savol uchun Rasm (Ixtiyoriy)</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Input type="file"
+                                                                           onChange={(e) => setQuestionImage(e.target.files[0])}/>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="space-y-4">
+                                                                <Label>Variantlar</Label>
+                                                                {optionsText.map((option, idx) => (
+                                                                    <div key={idx}
+                                                                         className="space-y-2 p-3 border rounded-md">
+                                                                        <div className="flex items-center gap-2 mb-2">
+                                                                            <span
+                                                                                className="font-medium">{String.fromCharCode(65 + idx)}:</span>
+                                                                        </div>
+                                                                        <MathSymbolsToolbar
+                                                                            onInsertSymbol={(symbol) => insertSymbolInOption(symbol, idx)}
+                                                                        />
+                                                                        <Input
+                                                                            id={`optionInput-${idx}`}
+                                                                            type="text"
+                                                                            placeholder={`Variant ${idx + 1}`}
+                                                                            value={option}
+                                                                            onChange={(e) => {
+                                                                                const newOptions = [...optionsText]
+                                                                                newOptions[idx] = e.target.value
+                                                                                setOptionsText(newOptions)
+                                                                            }}
+                                                                        />
+
+                                                                        <div className="flex items-center gap-2 mt-2">
+                                                                            <Label>Variant {idx + 1} uchun rasm
+                                                                                (Ixtiyoriy)</Label>
+                                                                            <Input
+                                                                                type="file"
+                                                                                onChange={(e) => {
+                                                                                    const newOptionImages = [...optionImages]
+                                                                                    newOptionImages[idx] = e.target.files[0]
+                                                                                    setOptionImages(newOptionImages)
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+
+                                                            <div className="space-y-2">
+                                                                <Label htmlFor="correctAnswer">To'g'ri Javob</Label>
+                                                                <Select value={answer}
+                                                                        onValueChange={(value) => setAnswerText(value)}>
+                                                                    <SelectTrigger>
+                                                                        <SelectValue
+                                                                            placeholder="To'g'ri javobli variantni belgilang"/>
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="option1">A</SelectItem>
+                                                                        <SelectItem value="option2">B</SelectItem>
+                                                                        <SelectItem value="option3">C</SelectItem>
+                                                                        <SelectItem value="option4">D</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
                                                         </div>
+
                                                         <DialogFooter>
-                                                            <DialogClose asChild>
+                                                            <DialogClose>
+                                                                <Button variant="outline"
+                                                                        onClick={() => setIsAddingQuestion(false)}>
+                                                                    Chiqish
+                                                                </Button>
                                                                 <Button
-                                                                    type="submit"
-                                                                    onClick={()=> createQuestion(topic._id, subtopic.subtopicname)}
+                                                                    onClick={() => handleSubmitWithImage(topic._id, subtopic.subtopicname)}
+                                                                    disabled={loadingForQuestionsAdd}
                                                                 >
-                                                                    Qo'shish
+                                                                    Savol qo'shish
                                                                 </Button>
                                                             </DialogClose>
                                                         </DialogFooter>

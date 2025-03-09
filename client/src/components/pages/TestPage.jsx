@@ -233,6 +233,7 @@ function TestPage() {
         fetch(`${import.meta.env.VITE_SERVER}/test/${testId}`)
             .then((res) => res.json())
             .then((data) => {
+                console.log(data)
                 dispatch(setTest(data))
                 const storedIndex = Number(sessionStorage.getItem("currentIndex")) || 0
                 setCurrentIndex(storedIndex)
@@ -284,6 +285,8 @@ function TestPage() {
     }
 
     const handleAnswerSelect = async (answer) => {
+        console.log("answer: " +answer)
+        // const finalAnswer = "option"+ Number(Object.values(test.questions[currentIndex].options).indexOf(answer))
         setSelectedOption(answer)
         dispatch(updateAnswer({ index: currentIndex, answer }))
 
@@ -351,7 +354,7 @@ function TestPage() {
             </div>
         )
     }
-
+    // console.log(Object.values(test.questions[currentIndex].options)[0])
     return (
         <div className=" bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
             <div className=" mx-auto">
@@ -374,7 +377,8 @@ function TestPage() {
                     </CardHeader>
                     <CardContent className="flex-grow flex flex-col justify-center px-8 py-6">
                         <div className="mb-6">
-                            <h2 className="text-3xl font-semibold mb-12 text-center">{test.questions[currentIndex].question}</h2>
+                            {test.questions[currentIndex].questionImage && <img src={test.questions[currentIndex].questionImage} className={`w-48 h-48 mx-auto`} alt=""/> }
+                            <h2 className="text-3xl font-semibold mb-12 text-center">{test.questions[currentIndex].questionText}</h2>
                             <RadioGroup
                                 value={
                                     test.questions[currentIndex].selectedAnswer
@@ -385,11 +389,13 @@ function TestPage() {
                                 className="space-y-8"
                             >
                                 {test.questions.length > 1
-                                    ? test.questions[currentIndex].options.map((option, index) => (
+                                    ? Object.values(test.questions[currentIndex].options).map((option, index) => (
                                         <div key={index} className="flex items-center space-x-4">
-                                            <RadioGroupItem value={option} id={`option-${index}`} />
-                                            <Label htmlFor={`option-${index}`} className="text-xl">
-                                                {option}
+                                            <RadioGroupItem value={"option"+Number(index+1)} id={`option-${index}`} />
+                                            <Label htmlFor={`option-${index}`} className="text-xl flex justify-between items-center">
+                                                {option.text}
+                                                {option.image && <img src={option.image} className={`w-32 h-32`} alt="rasm"/> }
+
                                             </Label>
                                         </div>
                                     ))

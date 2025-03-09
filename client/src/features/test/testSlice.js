@@ -4,10 +4,15 @@ const initialState = {
     testData: {
         subtopicname: [],
         questions: [{
-            questionId:null,
-            question:null,
-            answer:null,
-            options:null,
+            questionText:null,
+            questionImage:null,
+            correctAnswer:null,
+            options: {
+                option1:null,
+                option2:null,
+                option3:null,
+                option4:null,
+            },
             selectedAnswer:null
         }],
         remainingTime:null,

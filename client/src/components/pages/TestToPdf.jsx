@@ -32,6 +32,16 @@ function TestToPdf(props) {
     useEffect(() => {
         getData()
     }, [])
+    const getBase64FromUrl = async (url) => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    };
+
     const toggleTopic = (topicId) => {
         setOpenTopics((prev) => ({
             ...prev,
@@ -76,76 +86,15 @@ function TestToPdf(props) {
         generateAnswersPDF(testVariations);
     };
 
-    // const generateTestPDFs = (variations) => {
-    //     const urls = [];
-    //
-    //
-    //     variations.forEach((questions, index) => {
-    //         const doc = new jsPDF();
-    //         const pageWidth = doc.internal.pageSize.width - 20; // Page width with margin
-    //         const pageHeight = doc.internal.pageSize.height - 20; // Page height with margin
-    //         let y = 40; // Start after labels
-    //
-    //         doc.setFontSize(16);
-    //         doc.text(`Test Variant-${index + 1}`, 10, 10);
-    //         doc.setFontSize(12);
-    //         doc.text("F.I.SH: ______________________", 10, 20);
-    //         doc.text("Sinf: _______________________", 120, 20);
-    //
-    //         questions.forEach((q, i) => {
-    //             doc.setFontSize(14);
-    //             const questionText = `${i + 1}. ${q.question}`;
-    //             const questionLines = doc.splitTextToSize(questionText, pageWidth); // Wrap text
-    //             const questionHeight = questionLines.length * 7;
-    //
-    //             if (y + questionHeight > pageHeight) {
-    //                 doc.addPage();
-    //                 y = 20; // Reset Y for new page
-    //             }
-    //
-    //             doc.text(questionLines, 10, y);
-    //             y += questionHeight;
-    //
-    //             doc.setFontSize(12);
-    //             q.options.forEach((option, j) => {
-    //                 const optionText = `${String.fromCharCode(65 + j)}) ${option}`;
-    //                 const optionLines = doc.splitTextToSize(optionText, pageWidth - 10);
-    //                 const optionHeight = optionLines.length * 6;
-    //
-    //                 if (y + optionHeight > pageHeight) {
-    //                     doc.addPage();
-    //                     y = 20;
-    //                 }
-    //
-    //                 doc.text(optionLines, 15, y);
-    //                 y += optionHeight + 4;
-    //             });
-    //
-    //             y += 10;
-    //         });
-    //
-    //         // Add page numbers
-    //         const totalPages = doc.internal.getNumberOfPages();
-    //         for (let i = 1; i <= totalPages; i++) {
-    //             doc.setPage(i);
-    //             doc.text(`Sahifa ${i}/${totalPages}`, 10, pageHeight + 5);
-    //         }
-    //
-    //         const blob = doc.output("blob");
-    //         const url = URL.createObjectURL(blob);
-    //         urls.push({ url, name: `${index + 1}.pdf` });
-    //     });
-    //     setPdfUrls(urls);
-    // };
-    const generateTestPDFs = (variations) => {
+    const generateTestPDFs = async (variations) => {
         const urls = [];
 
-        variations.forEach((questions, index) => {
+        for (const [index, questions] of variations.entries()) {
             const doc = new jsPDF();
             const margin = 10;
             const pageWidth = doc.internal.pageSize.width - 2 * margin;
             const pageHeight = doc.internal.pageSize.height - 20;
-            const columnWidth = (pageWidth / 2) - 5; // Two columns with a gap
+            const columnWidth = (pageWidth / 2) - 5;
             let yLeft = 40;
             let yRight = 40;
             let isLeftColumn = true;
@@ -155,16 +104,23 @@ function TestToPdf(props) {
             doc.setFontSize(12);
             doc.text("F.I.SH: ______________________", margin, 20);
             doc.text("Sinf: _______________________", margin + 110, 20);
-            doc.text("Sana: _______________________", margin, 28)
+            doc.text("Sana: _______________________", margin, 28);
 
-            questions.forEach((q, i) => {
+            for (const [i, q] of questions.entries()) {
                 let x = isLeftColumn ? margin : margin + columnWidth + 10;
                 let y = isLeftColumn ? yLeft : yRight;
 
                 doc.setFontSize(14);
-                const questionText = `${i + 1}. ${q.question}`;
+                const questionText = `${i + 1}. ${q.questionText}`;
                 const questionLines = doc.splitTextToSize(questionText, columnWidth);
-                const questionHeight = questionLines.length * 7;
+                let questionHeight = questionLines.length * 7;
+
+                // Add question image if available
+                if (q.questionImage) {
+                    const imageBase64 = await getBase64FromUrl(q.questionImage);
+                    doc.addImage(imageBase64, "JPEG", x, y, 40, 40);
+                    y += 45; // Adjust spacing for the image
+                }
 
                 if (y + questionHeight > pageHeight) {
                     doc.addPage();
@@ -179,10 +135,18 @@ function TestToPdf(props) {
                 y += questionHeight;
 
                 doc.setFontSize(12);
-                q.options.forEach((option, j) => {
-                    const optionText = `${String.fromCharCode(65 + j)}) ${option}`;
+                for (const [j, optionKey] of Object.keys(q.options).entries()) {
+                    const option = q.options[optionKey];
+                    const optionText = `${String.fromCharCode(65 + j)}) ${option.text}`;
                     const optionLines = doc.splitTextToSize(optionText, columnWidth - 5);
-                    const optionHeight = optionLines.length * 6;
+                    let optionHeight = optionLines.length * 6;
+
+                    // Add option image if available
+                    if (option.image) {
+                        const imageBase64 = await getBase64FromUrl(option.image);
+                        doc.addImage(imageBase64, "JPEG", x + 5, y, 30, 30);
+                        y += 35; // Adjust spacing for the image
+                    }
 
                     if (y + optionHeight > pageHeight) {
                         doc.addPage();
@@ -195,7 +159,7 @@ function TestToPdf(props) {
 
                     doc.text(optionLines, x + 5, y);
                     y += optionHeight + 4;
-                });
+                }
 
                 if (isLeftColumn) {
                     yLeft = y + 10;
@@ -203,25 +167,18 @@ function TestToPdf(props) {
                     yRight = y + 10;
                 }
                 isLeftColumn = !isLeftColumn;
-            });
-
-            // Add page numbers
-            const totalPages = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= totalPages; i++) {
-                doc.setPage(i);
-                doc.text(`Sahifa ${i}/${totalPages}`, margin, pageHeight + 5);
             }
 
             const blob = doc.output("blob");
             const url = URL.createObjectURL(blob);
             urls.push({ url, name: `${index + 1}.pdf` });
-        });
+        }
 
         setPdfUrls(urls);
     };
 
 
-    const generateAnswersPDF = (variations) => {
+    const generateAnswersPDF = async (variations) => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.width - 20; // Ensure margins
         const pageHeight = doc.internal.pageSize.height - 20;
@@ -231,7 +188,7 @@ function TestToPdf(props) {
         doc.text("Test Javoblari", 10, 10);
         doc.setFontSize(14);
 
-        variations.forEach((questions, index) => {
+        for (let index = 0; index < variations.length; index++) {
             if (y + 10 > pageHeight) {
                 doc.addPage();
                 y = 20;
@@ -240,11 +197,12 @@ function TestToPdf(props) {
             doc.text(`Test Variant-${index + 1}`, 10, y);
             y += 10;
 
-            questions.forEach((q, i) => {
-                const questionIndex = q.options.indexOf(q.answer);
+            for (let i = 0; i < variations[index].length; i++) {
+                const q = variations[index][i];
+                const questionIndex = Object.keys(q.options).indexOf(q.answer);
                 const answerLetter = ["A", "B", "C", "D"][questionIndex] || "?";
-                const answerText = `${i + 1}. (${answerLetter}) ${q.answer}`;
-                const wrappedText = doc.splitTextToSize(answerText, pageWidth); // Wrap text
+                const answerText = `${i + 1}. (${answerLetter}) ${q.options[q.answer].text}`;
+                const wrappedText = doc.splitTextToSize(answerText, pageWidth);
 
                 if (y + wrappedText.length * 7 > pageHeight) {
                     doc.addPage();
@@ -253,12 +211,24 @@ function TestToPdf(props) {
 
                 doc.text(wrappedText, 15, y);
                 y += wrappedText.length * 7 + 5; // Dynamic spacing
-            });
+
+                // Check if the answer has an image
+                if (q.options[q.answer].image) {
+                    const imageUrl = q.options[q.answer].image;
+                    try {
+                        const imgData = await getBase64FromUrl(imageUrl);
+                        doc.addImage(imgData, "PNG", 15, y, 40, 40); // Adjust size as needed
+                        y += 45;
+                    } catch (error) {
+                        console.error("Error loading image:", error);
+                    }
+                }
+            }
 
             y += 10; // Extra space after each test variant
-        });
+        }
 
-// Add page numbers
+        // Add page numbers
         const totalPages = doc.internal.getNumberOfPages();
         for (let i = 1; i <= totalPages; i++) {
             doc.setPage(i);
@@ -269,6 +239,8 @@ function TestToPdf(props) {
         const url = URL.createObjectURL(blob);
         setAnswersUrl(url);
     };
+
+
     if (loading) {
         return (
             <div className={`grid items-center justify-center m-auto`}>

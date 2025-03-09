@@ -5,35 +5,44 @@ import { CheckCircle, XCircle, MinusCircle, Loader2 } from "lucide-react"
 
 function EachResultPage(props) {
     const params = useParams()
-    const [data, setData] = useState([])
+    const [data, setData] = useState(null)
     const [loading, setLoading] = useState(true)
-    const totalQuestions = !loading && data?.questions.length
-    const answeredQuestions = !loading && data?.questions.filter((q) => q.selectedAnswer !== null).length
-    const correctAnswers = !loading && data?.questions.filter((q) => q.selectedAnswer === q.answer).length
-    const getTest = async ()=>{
-        await fetch(`${import.meta.env.VITE_SERVER}/test/${params.testId}`)
-            .then(res=>res.json())
-            .then(data=>{
-                setData(data)
-                setLoading(false)
-            })
-    }
-    useEffect(()=>{
-        getTest()
-    }, [])
 
-    if (loading){
+    const totalQuestions = !loading && data?.questions.length
+    const correctAnswers = !loading && data?.questions.filter((q) => q.selectedAnswer === q.correctAnswer).length
+
+    const getTest = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_SERVER}/test/${params.testId}`)
+            const result = await response.json()
+            console.log(result)
+            setData(result)
+            setLoading(false)
+        } catch (error) {
+            console.error("Error fetching test data:", error)
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        getTest()
+    }, [params.testId])
+
+    if (loading) {
         return (
-            <div className={`grid items-center justify-center m-auto`}>
-                <Loader2 className="mr-2 h-20 w-20 animate-spin"/>
+            <div className="grid items-center justify-center m-auto h-screen">
+                <Loader2 className="h-20 w-20 animate-spin text-primary" />
             </div>
         )
     }
+
     return (
-        <div className="container mx-auto px-4 py-8  dark:bg-gray-900 min-h-screen">
+        <div className="container mx-auto px-4 py-8 dark:bg-gray-900 min-h-screen">
             <Card className="mb-8">
                 <CardHeader>
-                    <CardTitle className="text-3xl font-bold">{data.subtopicname} - ko'rib chiqish</CardTitle>
+                    <CardTitle className="text-3xl font-bold">
+                        {Array.isArray(data.subtopicname) ? data.subtopicname.join(", ") : data.subtopicname} - ko'rib chiqish
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p className="text-lg mb-2">Test boshlangan vaqti: {new Date(data.startTime).toLocaleString()}</p>
@@ -42,10 +51,6 @@ function EachResultPage(props) {
                             <p className="font-semibold">Savollar soni</p>
                             <p className="text-2xl font-bold">{totalQuestions}</p>
                         </div>
-                        {/*<div className="bg-yellow-100 dark:bg-yellow-800 p-4 rounded-lg">*/}
-                        {/*    <p className="font-semibold">Javob berilgan savollar</p>*/}
-                        {/*    <p className="text-2xl font-bold">{answeredQuestions}</p>*/}
-                        {/*</div>*/}
                         <div className="bg-yellow-100 dark:bg-yellow-800 p-4 rounded-lg">
                             <p className="font-semibold">To'g'ri javob berilganlar</p>
                             <p className="text-2xl font-bold">{correctAnswers}</p>
@@ -59,14 +64,15 @@ function EachResultPage(props) {
                     </div>
                 </CardContent>
             </Card>
+
             <div className="space-y-6">
                 {data.questions.map((question, index) => (
                     <Card
-                        key={question._id}
+                        key={index}
                         className={`border-l-4 ${
-                            question.selectedAnswer === question.answer
+                            question.selectedAnswer === question.correctAnswer
                                 ? "border-green-500"
-                                : (question.selectedAnswer === undefined || null)
+                                : !question.selectedAnswer || question.selectedAnswer === ""
                                     ? "border-yellow-500"
                                     : "border-red-500"
                         }`}
@@ -75,57 +81,103 @@ function EachResultPage(props) {
                             <CardTitle className="text-xl flex items-start">
                 <span
                     className={`text-white rounded-full w-8 h-8 flex items-center justify-center mr-2 flex-shrink-0 ${
-                        question.selectedAnswer === question.answer
+                        question.selectedAnswer === question.correctAnswer
                             ? "bg-green-500"
-                            : (question.selectedAnswer === undefined || null)
+                            : !question.selectedAnswer || question.selectedAnswer === ""
                                 ? "bg-yellow-500"
                                 : "bg-red-500"
                     }`}
                 >
                   {index + 1}
                 </span>
-                                {question.question}
+                                <div className="flex flex-col">
+                                    <span>{question.questionText}</span>
+                                    {question.questionImage && (
+                                        <img
+                                            src={question.questionImage || "/placeholder.svg"}
+                                            alt="Question"
+                                            className="mt-2 max-w-md rounded-md"
+                                        />
+                                    )}
+                                </div>
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="space-y-2">
-                                {question.options.map((option, optionIndex) => (
+                                {Object.entries(question.options).map(([optionKey, option]) => (
                                     <li
-                                        key={optionIndex}
-                                        className={`p-3 rounded-lg flex items-center justify-between ${
-                                            option === question.answer
+                                        key={optionKey}
+                                        className={`p-3 rounded-lg flex items-center ${
+                                            option.text === question.options[question.correctAnswer]?.text
                                                 ? "bg-green-100 dark:bg-green-800 border-green-500"
-                                                : option === question.selectedAnswer
+                                                : optionKey === question.selectedAnswer && optionKey !== question.correctAnswer
                                                     ? "bg-red-100 dark:bg-red-800 border-red-500"
                                                     : "bg-gray-100 dark:bg-gray-700"
                                         } border-2`}
                                     >
-                                        <span>{option}</span>
-                                        {option === question.answer && <CheckCircle className="text-green-500" size={24} />}
-                                        {option === question.selectedAnswer && option !== question.answer && (
-                                            <XCircle className="text-red-500" size={24} />
-                                        )}
+                                        <div className="flex flex-1 items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span>{option.text}</span>
+                                                {option.image && (
+                                                    <img
+                                                        src={option.image || "/placeholder.svg"}
+                                                        alt={option.text}
+                                                        className="w-16 h-16 object-contain rounded-md"
+                                                    />
+                                                )}
+                                            </div>
+                                            <div>
+                                                {optionKey === question.correctAnswer && <CheckCircle className="text-green-500" size={24} />}
+                                                {optionKey === question.selectedAnswer && optionKey !== question.correctAnswer && (
+                                                    <XCircle className="text-red-500" size={24} />
+                                                )}
+                                            </div>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
+
                             <div className="mt-4 space-y-2">
-                                <p className="font-semibold flex items-center">
+                                <div className="font-semibold">
                                     <span className="mr-2">Belgilangan javob:</span>
-                                    {question.selectedAnswer ? (
-                                        <span className={question.selectedAnswer === question.answer ? "text-green-500" : "text-red-500"}>
-                      {question.selectedAnswer}
-                    </span>
+                                    {question.selectedAnswer && question.selectedAnswer !== "" ? (
+                                        <div className="flex items-center gap-2 mt-1">
+                      <span
+                          className={
+                              question.selectedAnswer === question.correctAnswer ? "text-green-500" : "text-red-500"
+                          }
+                      >
+                        {question.options[question.selectedAnswer]?.text}
+                      </span>
+                                            {question.options[question.selectedAnswer]?.image && (
+                                                <img
+                                                    src={question.options[question.selectedAnswer].image || "/placeholder.svg"}
+                                                    className="w-24 h-24 object-contain rounded-md"
+                                                    alt="Selected answer"
+                                                />
+                                            )}
+                                        </div>
                                     ) : (
                                         <span className="text-yellow-500 flex items-center">
                       <MinusCircle className="inline-block mr-1" size={20} />
                       Javob tanlanmagan
                     </span>
                                     )}
-                                </p>
-                                <p className="font-semibold flex items-center">
+                                </div>
+
+                                <div className="font-semibold">
                                     <span className="mr-2">To'g'ri javob:</span>
-                                    <span className="text-green-500">{question.answer}</span>
-                                </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-green-500">{question.options[question.correctAnswer]?.text}</span>
+                                        {question.options[question.correctAnswer]?.image && (
+                                            <img
+                                                src={question.options[question.correctAnswer].image || "/placeholder.svg"}
+                                                className="w-24 h-24 object-contain rounded-md"
+                                                alt="Correct answer"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

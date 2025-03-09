@@ -2,7 +2,38 @@ const {Schema, model} = require("mongoose");
 
 const TestSchema = new Schema({
     subtopicname:[{type:String, required:true}],
-    questions: [{ questionId: {type: Schema.ObjectId}, question:String, selectedAnswer: String, options:[String], answer:String }],
+    questions: [{
+        questionText: { type: String, required: true }, // Question text
+        questionImage: { type: String, default: null },
+        options: {
+            option1: {
+                text: { type: String, required: true },
+                image: { type: String, default: null }
+            },
+            option2: {
+                text: { type: String, required: true },
+                image: { type: String, default: null }
+            },
+            option3: {
+                text: { type: String, required: true },
+                image: { type: String, default: null }
+            },
+            option4: {
+                text: { type: String, required: true },
+                image: { type: String, default: null }
+            }
+        },
+        selectedAnswer: {
+            type: String,
+            // enum: ['option1', 'option2', 'option3', 'option4'],
+            required: false
+        },
+        correctAnswer: {
+            type: String,
+            enum: ['option1', 'option2', 'option3', 'option4'],
+            required: true
+        }
+    }],
     startTime: Date,
     remainingTime: Number, //  time in seconds
     isCompleted: Boolean,
