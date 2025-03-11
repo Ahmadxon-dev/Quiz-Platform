@@ -32,8 +32,8 @@ function UsersPage(props) {
     const [tableLoading, setTableLoading] = useState(false)
     const [loadingUserId, setLoadingUserId] = useState(null);
     const [role, setRole] = useState(null)
-    const user = useSelector(state => state.user)
     const {toast} = useToast()
+    const user = useSelector(state => state.user)
     const navigate = useNavigate()
     if (user.role === "user") {
         navigate("/")

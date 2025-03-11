@@ -19,12 +19,19 @@ import {useToast} from "@/hooks/use-toast.js";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.jsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.jsx";
 import {Label} from "@/components/ui/label.jsx";
+import {useNavigate} from "react-router-dom";
+import {useSelector} from "react-redux";
 
 
 function AddTopicsPage(props) {
     const [database, setDatabase] = useState([])
     const [loading, setLoading] = useState(true)
     const {toast} = useToast()
+    const user = useSelector(state => state.user)
+    const navigate = useNavigate()
+    if (user.role === "user") {
+        navigate("/")
+    }
     const getData = async () => {
         await fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`,)
             .then(res => res.json())

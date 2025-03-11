@@ -57,13 +57,6 @@ function Navbar(props) {
             label: 'Barcha Natijalar',
             roles: ["bosh admin"],
         }
-
-        // {
-        //     path: '/results',
-        //     label: 'View Results',
-        //     roles: ['admin'],
-        // },
-
     ];
     const filteredLinks = links.filter(link =>
         link.roles.some(role => user.role === role)

@@ -7,13 +7,19 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
+import {useSelector} from "react-redux";
 
 function AllResultsPage(props) {
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("date")
     const [sortDirection, setSortDirection] = useState("desc")
     const [quizResults,setData] = useState([])
+    const user = useSelector(state => state.user)
+    const navigate = useNavigate()
+    if (user.role === "user" || user.role === "admin") {
+        navigate("/")
+    }
     const formatTime = (seconds) => {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
