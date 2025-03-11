@@ -45,12 +45,12 @@ function Navbar(props) {
         {
             path: '/testtopdf',
             label: 'Test-PDF',
-            roles: ['admin', "bosh admin"],
+            roles: ['admin', "bosh admin", "user"],
         },
         {
             path: '/addtopic',
             label: 'Savollar qo\'shish',
-            roles: ["bosh admin"],
+            roles: ["bosh admin", "admin"],
         },
         {
             path: '/allresults',

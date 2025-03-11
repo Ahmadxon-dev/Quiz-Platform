@@ -57,6 +57,12 @@ function TestToPdf(props) {
             return [...prevCheckedValues, value]; // Add it if checked
         });
     };
+    const shuffleOptions = (options) => {
+        const entries = Object.entries(options);
+        const shuffledEntries = entries.sort(() => Math.random() - 0.5);
+        return Object.fromEntries(shuffledEntries);
+    };
+
     const handleGeneratePDFs = () => {
         let selectedQuestions = [];
 
@@ -68,23 +74,27 @@ function TestToPdf(props) {
         });
 
         if (selectedQuestions.length < numQuestions) {
-            // alert("Not enough questions available for selection.");
             toast({
                 title: "Tanlangan mavzulardagi savollar yetmaydi.",
                 variant: "destructive",
-            })
+            });
             return;
         }
 
         let testVariations = [];
         for (let i = 0; i < numVariations; i++) {
-            let shuffledQuestions = [...selectedQuestions].sort(() => 0.5 - Math.random()).slice(0, numQuestions);
+            let shuffledQuestions = [...selectedQuestions]
+                .sort(() => 0.5 - Math.random())
+                .slice(0, numQuestions)
+                .map(q => ({ ...q, options: shuffleOptions(q.options) }));
+
             testVariations.push(shuffledQuestions);
         }
 
         generateTestPDFs(testVariations);
         generateAnswersPDF(testVariations);
     };
+
 
     const generateTestPDFs = async (variations) => {
         const urls = [];

@@ -212,7 +212,7 @@ import {Button} from "@/components/ui/button.jsx";
 // }
 
 function TestPage() {
-    const { testId } = useParams()
+    const {testId} = useParams()
     const [loading, setLoading] = useState(true)
     const test = useSelector((state) => state.test.testData)
     const navigate = useNavigate()
@@ -285,10 +285,10 @@ function TestPage() {
     }
 
     const handleAnswerSelect = async (answer) => {
-        console.log("answer: " +answer)
+        console.log("answer: " + answer)
         // const finalAnswer = "option"+ Number(Object.values(test.questions[currentIndex].options).indexOf(answer))
         setSelectedOption(answer)
-        dispatch(updateAnswer({ index: currentIndex, answer }))
+        dispatch(updateAnswer({index: currentIndex, answer}))
 
         try {
             await fetch(`${import.meta.env.VITE_SERVER}/test/${testId}/answer`, {
@@ -307,7 +307,7 @@ function TestPage() {
     }
     const handleRemoveAnswerSelect = async () => {
         setSelectedOption(null)
-        dispatch(removeAnswer({ index: currentIndex }))
+        dispatch(removeAnswer({index: currentIndex}))
 
         try {
             await fetch(`${import.meta.env.VITE_SERVER}/test/${testId}/answer`, {
@@ -350,105 +350,139 @@ function TestPage() {
     if (loading) {
         return (
             <div className={`grid items-center justify-center m-auto`}>
-                <Loader2 className="mr-2 h-20 w-20 animate-spin" />
+                <Loader2 className="mr-2 h-20 w-20 animate-spin"/>
             </div>
         )
     }
-    // console.log(Object.values(test.questions[currentIndex].options)[0])
     return (
         <div className=" bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className=" mx-auto">
-                <Card className="w-[80vw] h-fit mx-auto flex flex-col">
-                    <CardHeader className={`flex flex-row justify-between`}>
-                        <h2 className={`text-3xl text-start font-semibold mb-12 `}>
-                            {hours < 10 ? `0${hours}` : hours}:{minutes < 10 ? `0${minutes}` : minutes}:
-                            {seconds < 10 ? `0${seconds}` : seconds}
-                        </h2>
-                        <CardTitle className="text-4xl font-bold text-center">
-                            {test.subtopicname.map(subtopic => (
-                                <span key={subtopic}>{subtopic} </span>
-                            ))}
-                        </CardTitle>
-
-
-                        <div className="mt-4 text-sm text-gray-500">
-                            Savol {+currentIndex + 1}/{test.questions.length}
+        <Card className="w-[90%] mx-auto">
+            <CardHeader className="border-b pb-4">
+                <div className="flex flex-col md:flex-row justify-between items-center">
+                    <h2 className="text-xl font-medium">
+                        {hours < 10 ? `0${hours}` : hours}:{minutes < 10 ? `0${minutes}` : minutes}:
+                        {seconds < 10 ? `0${seconds}` : seconds}
+                    </h2>
+                    <CardTitle className="text-2xl md:text-3xl font-bold text-center my-2 md:my-0">
+                        {test.subtopicname.map((subtopic, index) => (
+                            <span key={subtopic}>
+                                {subtopic}{index !== test.subtopicname.length - 1 ? ', ' : ''}
+                            </span>
+                        ))}
+                    </CardTitle>
+                    <div className="text-sm text-gray-500">
+                        Savol {+currentIndex + 1}/{test.questions.length}
+                    </div>
+                </div>
+            </CardHeader>
+            <div className="flex flex-col md:flex-row">
+                <CardContent className="flex-grow flex flex-col justify-center px-8 py-6">
+                    <div className="mb-4">
+                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-green-500 transition-all duration-300"
+                                style={{
+                                    width: `${(test.questions.filter(q => q.selectedAnswer).length / test.questions.length) * 100}%`
+                                }}
+                            ></div>
                         </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow flex flex-col justify-center px-8 py-6">
-                        <div className="mb-6">
-                            {test.questions[currentIndex].questionImage && <img src={test.questions[currentIndex].questionImage} className={`w-48 h-48 mx-auto`} alt=""/> }
-                            <h2 className="text-3xl font-semibold mb-12 text-center">{test.questions[currentIndex].questionText}</h2>
-                            <RadioGroup
-                                value={
-                                    test.questions[currentIndex].selectedAnswer
-                                        ? test.questions[currentIndex].selectedAnswer
-                                        : selectedOption
-                                }
-                                onValueChange={(e) => handleAnswerSelect(e)}
-                                className="space-y-8"
-                            >
-                                {test.questions.length > 1
-                                    ? Object.values(test.questions[currentIndex].options).map((option, index) => (
-                                        <div key={index} className="flex items-center space-x-4">
-                                            <RadioGroupItem value={"option"+Number(index+1)} id={`option-${index}`} />
-                                            <Label htmlFor={`option-${index}`} className="text-xl flex justify-between items-center">
-                                                {option.text}
-                                                {option.image && <img src={option.image} className={`w-32 h-32`} alt="rasm"/> }
-
-                                            </Label>
-                                        </div>
-                                    ))
-                                    : "test yoq"}
-                                <Button variant={"outline"} className={`w-fit `} onClick={handleRemoveAnswerSelect}>
-                                    Belgilanganlarni o'chirish
-                                </Button>
-                            </RadioGroup>
+                        <div className="text-sm text-center mt-1">
+                            {test.questions.filter(q => q.selectedAnswer).length} / {test.questions.length} javob
+                            berilgan
                         </div>
-
-                    </CardContent>
-                    <CardFooter className="flex justify-between mt-auto px-8 py-6">
-                        <Button size="lg" variant="outline" onClick={handlePrevious} disabled={currentIndex === 0}>
-                            Ortga
-                        </Button>
-                        <div>
-                            <div className="mt-6 flex flex-wrap justify-center gap-2">
-                                {test.questions.map((_, index) => (
-                                    <Button
-                                        key={index}
-                                        variant={currentIndex === index ? "default" : "outline"}
-                                        onClick={() => handleQuestionChange(index)}
-                                    >
-                                        {index + 1}
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            {
-                                (currentIndex < test.questions.length - 1) && (
-                                    <Button
-                                        size="lg"
-                                        className="mr-4"
-                                        onClick={handleNext}
-                                    >
-                                        Keyingisi
-                                    </Button>
-                                )
+                    </div>
+                    <div className="mb-6">
+                        {test.questions[currentIndex].questionImage && (
+                            <img
+                                src={test.questions[currentIndex].questionImage || "/placeholder.svg"}
+                                className={`w-48 h-48 mx-auto`}
+                                alt=""
+                            />
+                        )}
+                        <h2 className="text-3xl font-semibold mb-12 text-center">{test.questions[currentIndex].questionText}</h2>
+                        <RadioGroup
+                            value={
+                                test.questions[currentIndex].selectedAnswer
+                                    ? test.questions[currentIndex].selectedAnswer
+                                    : selectedOption
                             }
+                            onValueChange={(e) => handleAnswerSelect(e)}
+                            className="space-y-8"
+                        >
+                            {test.questions.length > 1
+                                ? Object.values(test.questions[currentIndex].options).map((option, index) => (
+                                    <div key={index} className="flex items-center space-x-4">
+                                        <RadioGroupItem value={"option" + Number(index + 1)} id={`option-${index}`}/>
+                                        <Label htmlFor={`option-${index}`}
+                                               className="text-xl flex justify-between items-center">
+                                            {option.text}
+                                            {option.image && (
+                                                <img src={option.image || "/placeholder.svg"} className={`w-32 h-32`}
+                                                     alt="rasm"/>
+                                            )}
+                                        </Label>
+                                    </div>
+                                ))
+                                : "test yoq"}
+                            <Button variant={"outline"} className={`w-fit `} onClick={handleRemoveAnswerSelect}>
+                                Belgilanganlarni o'chirish
+                            </Button>
+                        </RadioGroup>
+                    </div>
+                </CardContent>
 
+                {/* Question navigation card on the right */}
+                <div className="w-full md:w-64 p-4 border-l border-gray-200">
+                    <div className="sticky top-4">
+                        <h3 className="text-lg font-medium mb-4 text-center">Savollar</h3>
+                        <div className="grid grid-cols-5 gap-4 sm:gap-2 mb-6">
+                            {test.questions.map((_, index) => (
+                                <Button
+                                    key={index}
+                                    variant={
+                                        currentIndex === index ? "default" : test.questions[index].selectedAnswer ? "secondary" : "outline"
+                                    }
+                                    onClick={() => handleQuestionChange(index)}
+                                    className={`h-10 w-10 p-0 ${
+                                        test.questions[index].selectedAnswer
+                                            ? "bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
+                                            : ""
+                                    }`}
+                                >
+                                    {index + 1}
+                                </Button>
+                            ))}
+                        </div>
 
+                        <div className="flex flex-col gap-3 mt-8">
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                onClick={handlePrevious}
+                                disabled={currentIndex === 0}
+                                className="w-full"
+                            >
+                                Ortga
+                            </Button>
+
+                            {currentIndex < test.questions.length - 1 && (
+                                <Button size="lg" className="w-full" onClick={handleNext}>
+                                    Keyingisi
+                                </Button>
+                            )}
 
                             {test.questions.length - 1 === currentIndex && (
-                                <Button size={`lg`} onClick={handleSubmit}>
+                                <Button size="lg" className="w-full" onClick={handleSubmit}>
                                     Topshirish
                                 </Button>
                             )}
                         </div>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </div>
             </div>
+        </Card>
         </div>
     )
 }
+
 export default React.memo(TestPage);

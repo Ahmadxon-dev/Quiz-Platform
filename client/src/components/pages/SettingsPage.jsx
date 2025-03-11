@@ -72,7 +72,6 @@ function SettingsPage(props) {
             <div className="container max-w-4xl px-4 py-12 mx-auto">
                 <div className="mb-8 space-y-2">
                     <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Sozlamalar</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Manage your account settings and preferences</p>
                 </div>
 
                 <Tabs defaultValue="personal" className="space-y-6">
@@ -91,7 +90,6 @@ function SettingsPage(props) {
                         <Card className="border border-slate-200 shadow-sm dark:border-slate-800">
                             <CardHeader>
                                 <CardTitle className="text-2xl">Shaxsiy ma&apos;lumotlar</CardTitle>
-                                <CardDescription>Update your personal information</CardDescription>
                             </CardHeader>
                             <form onSubmit={handleSubmit}>
                                 <CardContent className="space-y-6">
@@ -144,14 +142,13 @@ function SettingsPage(props) {
                     <TabsContent value="security" className="space-y-6">
                         <Card className="border border-slate-200 shadow-sm dark:border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-2xl">Change Password</CardTitle>
-                                <CardDescription>Update your password to keep your account secure</CardDescription>
+                                <CardTitle className="text-2xl">Parolni o'zgaritirish</CardTitle>
                             </CardHeader>
                             <form onSubmit={handlePasswordSubmit}>
                                 <CardContent className="space-y-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="current-password" className="text-sm font-medium">
-                                            Current Password
+                                            Joriy Parol
                                         </Label>
                                         <div className="relative">
                                             <Input
@@ -160,7 +157,7 @@ function SettingsPage(props) {
                                                 value={currentPassword}
                                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                                 className="pr-10 transition-all focus:ring-2 focus:ring-offset-1 focus:ring-primary"
-                                                placeholder="Enter your current password"
+                                                placeholder="Joriy parolingizni kiriting"
                                             />
                                             <Button
                                                 type="button"
@@ -180,7 +177,7 @@ function SettingsPage(props) {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="new-password" className="text-sm font-medium">
-                                            New Password
+                                            Yangi Parol
                                         </Label>
                                         <div className="relative">
                                             <Input
@@ -189,7 +186,7 @@ function SettingsPage(props) {
                                                 value={newPassword}
                                                 onChange={(e) => setNewPassword(e.target.value)}
                                                 className="pr-10 transition-all focus:ring-2 focus:ring-offset-1 focus:ring-primary"
-                                                placeholder="Enter your new password"
+                                                placeholder="Yangi parol kiriting"
                                             />
                                             <Button
                                                 type="button"
@@ -230,10 +227,10 @@ function SettingsPage(props) {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Processing...
+                        Saqlanmoqda...
                       </span>) : (<span className="flex items-center justify-center gap-2">
                         <Lock className="w-4 h-4"/>
-                        Change Password
+                        Parolni O'zgartirish
                       </span>)}
                                     </Button>
                                 </CardFooter>
@@ -243,112 +240,6 @@ function SettingsPage(props) {
                 </Tabs>
             </div>
         </div>
-
-        // <div className={`bg-gray-100 h-screen w-full`}>
-        // <div className="h-full max-w-2xl py-10 mx-auto">
-        //     <div className="space-y-6">
-        //         <div>
-        //             <h1 className="text-3xl font-bold tracking-tight">Sozlamalar</h1>
-        //         </div>
-        //
-        //         <Card>
-        //             <CardHeader>
-        //                 <CardTitle>Shaxsiy ma'lumotlar</CardTitle>
-        //             </CardHeader>
-        //             <form onSubmit={handleSubmit}>
-        //                 <CardContent className="space-y-4">
-        //                     <div className="space-y-2">
-        //                         <Label htmlFor="name">Name</Label>
-        //                         <Input
-        //                             id="name"
-        //                             defaultValue={user.name}
-        //                             onChange={(e) => setNewName(e.target.value)}
-        //                         />
-        //                     </div>
-        //                 </CardContent>
-        //                 <CardFooter className="flex justify-end border-t px-6 py-4">
-        //                     <Button type="submit" disabled={isLoading || (newName === "" || newName === user.name)}>
-        //                         {isLoading ? "Saqlanmoqda..." : "Saqlash"}
-        //                     </Button>
-        //                 </CardFooter>
-        //             </form>
-        //         </Card>
-        //         <Card className="w-full max-w-md mx-auto">
-        //             <CardHeader>
-        //                 <CardTitle className="text-2xl">Change Password</CardTitle>
-        //                 <CardDescription>Update your password to keep your account secure</CardDescription>
-        //             </CardHeader>
-        //             <form onSubmit={handlePasswordSubmit}>
-        //                 <CardContent className="space-y-4">
-        //                     <div className="space-y-2">
-        //                         <Label htmlFor="current-password">Current Password</Label>
-        //                         <div className="relative">
-        //                             <Input
-        //                                 id="current-password"
-        //                                 type={showCurrentPassword ? "text" : "password"}
-        //                                 value={currentPassword}
-        //                                 onChange={(e) => setCurrentPassword(e.target.value)}
-        //                                 className="pr-10"
-        //                                 placeholder="Enter your current password"
-        //                             />
-        //                             <Button
-        //                                 type="button"
-        //                                 variant="ghost"
-        //                                 size="icon"
-        //                                 className="absolute right-0 top-0 h-full px-3"
-        //                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-        //                             >
-        //                                 {showCurrentPassword ? (
-        //                                     <EyeOff className="h-4 w-4 text-muted-foreground" />
-        //                                 ) : (
-        //                                     <Eye className="h-4 w-4 text-muted-foreground" />
-        //                                 )}
-        //                                 <span className="sr-only">{showCurrentPassword ? "Hide password" : "Show password"}</span>
-        //                             </Button>
-        //                         </div>
-        //                     </div>
-        //
-        //                     <div className="space-y-2">
-        //                         <Label htmlFor="new-password">New Password</Label>
-        //                         <div className="relative">
-        //                             <Input
-        //                                 id="new-password"
-        //                                 type={showNewPassword ? "text" : "password"}
-        //                                 value={newPassword}
-        //                                 onChange={(e) => setNewPassword(e.target.value)}
-        //                                 className="pr-10"
-        //                                 placeholder="Enter your new password"
-        //                             />
-        //                             <Button
-        //                                 type="button"
-        //                                 variant="ghost"
-        //                                 size="icon"
-        //                                 className="absolute right-0 top-0 h-full px-3"
-        //                                 onClick={() => setShowNewPassword(!showNewPassword)}
-        //                             >
-        //                                 {showNewPassword ? (
-        //                                     <EyeOff className="h-4 w-4 text-muted-foreground" />
-        //                                 ) : (
-        //                                     <Eye className="h-4 w-4 text-muted-foreground" />
-        //                                 )}
-        //                                 <span className="sr-only">{showNewPassword ? "Hide password" : "Show password"}</span>
-        //                             </Button>
-        //                         </div>
-        //                     </div>
-        //                 </CardContent>
-        //                 <CardFooter>
-        //                     <Button type="submit" className="w-full">
-        //     <span className="flex items-center gap-2">
-        //       <Lock className="h-4 w-4" />
-        //       Change Password
-        //     </span>
-        //                     </Button>
-        //                 </CardFooter>
-        //             </form>
-        //         </Card>
-        //     </div>
-        // </div>
-        // </div>
     );
 }
 
