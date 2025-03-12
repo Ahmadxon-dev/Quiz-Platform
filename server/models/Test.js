@@ -21,6 +21,10 @@ const TestSchema = new Schema({
             option4: {
                 text: { type: String, required: true },
                 image: { type: String, default: null }
+            },
+            option5: {
+                text: { type: String, required: true },
+                image: { type: String, default: null }
             }
         },
         selectedAnswer: {
@@ -30,7 +34,7 @@ const TestSchema = new Schema({
         },
         correctAnswer: {
             type: String,
-            enum: ['option1', 'option2', 'option3', 'option4'],
+            enum: ['option1', 'option2', 'option3', 'option4', 'option5'],
             required: true
         }
     }],

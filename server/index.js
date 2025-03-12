@@ -29,5 +29,4 @@ app.get('/', (req,res)=>{
 })
 app.listen(PORT, (req,res)=>{
     console.log("server has been started on port 5000")
-    console.log("http://localhost:5000")
 })

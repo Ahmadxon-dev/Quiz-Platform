@@ -15,11 +15,9 @@ function EachResultPage(props) {
         try {
             const response = await fetch(`${import.meta.env.VITE_SERVER}/test/${params.testId}`)
             const result = await response.json()
-            console.log(result)
             setData(result)
             setLoading(false)
         } catch (error) {
-            console.error("Error fetching test data:", error)
             setLoading(false)
         }
     }

@@ -12,6 +12,7 @@ const initialState = {
                 option2:null,
                 option3:null,
                 option4:null,
+                option5:null
             },
             selectedAnswer:null
         }],

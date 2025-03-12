@@ -46,7 +46,8 @@ router.post("/start", async (req,res)=>{
                 option1: { text: question.options.option1.text, image: question.options.option1.image || null },
                 option2: { text: question.options.option2.text, image: question.options.option2.image || null },
                 option3: { text: question.options.option3.text, image: question.options.option3.image || null },
-                option4: { text: question.options.option4.text, image: question.options.option4.image || null }
+                option4: { text: question.options.option4.text, image: question.options.option4.image || null },
+                option5: { text: question.options.option5.text, image: question.options.option5.image || null }
             },
             selectedAnswer: "", // Initially empty, user will select later
             correctAnswer: question.answer // Assign the correct answer
@@ -245,7 +246,8 @@ router.post('/questions/add', upload, async (req, res) => {
             option1: { text: optionsText[0] || '', image: optionImageUrls[0] || null },
             option2: { text: optionsText[1] || '', image: optionImageUrls[1] || null },
             option3: { text: optionsText[2] || '', image: optionImageUrls[2] || null },
-            option4: { text: optionsText[3] || '', image: optionImageUrls[3] || null }
+            option4: { text: optionsText[3] || '', image: optionImageUrls[3] || null },
+            option5: { text: optionsText[4] || '', image: optionImageUrls[4] || null }
         };
         await TopicAndQuestion.findOneAndUpdate(
             { _id: mainTopicId, "subtopics.subtopicname": subTopicName },

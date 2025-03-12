@@ -37,7 +37,6 @@ function AddTopicsPage(props) {
             .then(res => res.json())
             .then(data => {
                 setDatabase(data)
-                console.log(data)
                 setLoading(false)
             })
     }
@@ -409,7 +408,7 @@ function MathSymbolsToolbar({onInsertSymbol}) {
         Asosiy: [
             {symbol: "π", label: "Pi"},
             {symbol: "±", label: "Plus-minus"},
-            {symbol: "×", label: "Multiply"},
+            {symbol: "•", label: "Multiply"},
             {symbol: "÷", label: "Divide"},
             {symbol: "=", label: "Equals"},
             {symbol: "≠", label: "Not equals"},
@@ -451,6 +450,101 @@ function MathSymbolsToolbar({onInsertSymbol}) {
             {symbol: "⅙", label: "1/6"},
             {symbol: "⅛", label: "1/8"},
             {symbol: "a/b", label: "Ixtiyoriy kasr"},
+        ],
+        Superscripts: [
+            { symbol: "⁰", label: "⁰" },
+            { symbol: "¹", label: "¹" },
+            { symbol: "²", label: "²" },
+            { symbol: "³", label: "³" },
+            { symbol: "⁴", label: "⁴" },
+            { symbol: "⁵", label: "⁵" },
+            { symbol: "⁶", label: "⁶" },
+            { symbol: "⁷", label: "⁷" },
+            { symbol: "⁸", label: "⁸" },
+            { symbol: "⁹", label: "⁹" },
+            { symbol: "⁺", label: "plus" },
+            { symbol: "⁻", label: "minus" },
+            { symbol: "⁄", label: "slash" },
+            { symbol: "⁽", label: "left parenthesis" },
+            { symbol: "⁾", label: "right parenthesis" },
+            { symbol: "ᵃ", label: "a" },
+            { symbol: "ᵇ", label: "b" },
+            { symbol: "ᶜ", label: "c" },
+            { symbol: "ᵈ", label: "d" },
+            { symbol: "ᵉ", label: "e" },
+            { symbol: "ᶠ", label: "f" },
+            { symbol: "ᵍ", label: "g" },
+            { symbol: "ʰ", label: "h" },
+            { symbol: "ⁱ", label: "i" },
+            { symbol: "ʲ", label: "j" },
+            { symbol: "ᵏ", label: "k" },
+            { symbol: "ˡ", label: "l" },
+            { symbol: "ᵐ", label: "m" },
+            { symbol: "ⁿ", label: "n" },
+            { symbol: "ᵒ", label: "o" },
+            { symbol: "ᵖ", label: "p" },
+            { symbol: "ʳ", label: "r" },
+            { symbol: "ˢ", label: "s" },
+            { symbol: "ᵗ", label: "t" },
+            { symbol: "ᵘ", label: "u" },
+            { symbol: "ᵛ", label: "v" },
+            { symbol: "ʷ", label: "w" },
+            { symbol: "ˣ", label: "x" },
+            { symbol: "ʸ", label: "y" },
+            { symbol: "ᶻ", label: "z" },
+            { symbol: "ᴬ", label: "A" },
+            { symbol: "ᴮ", label: "B" },
+            { symbol: "ᴰ", label: "D" },
+            { symbol: "ᴱ", label: "E" },
+            { symbol: "ᴳ", label: "G" },
+            { symbol: "ᴴ", label: "H" },
+            { symbol: "ᴵ", label: "I" },
+            { symbol: "ᴶ", label: "J" },
+            { symbol: "ᴷ", label: "K" },
+            { symbol: "ᴸ", label: "L" },
+            { symbol: "ᴹ", label: "M" },
+            { symbol: "ᴺ", label: "N" },
+            { symbol: "ᴼ", label: "O" },
+            { symbol: "ᴾ", label: "P" },
+            { symbol: "ᴿ", label: "R" },
+            { symbol: "ᵀ", label: "T" },
+            { symbol: "ᵁ", label: "U" },
+            { symbol: "ⱽ", label: "V" },
+            { symbol: "ᵂ", label: "W" },
+        ],
+        Subscripts: [
+            { symbol: "₀", label: "0" },
+            { symbol: "₁", label: "1" },
+            { symbol: "₂", label: "2" },
+            { symbol: "₃", label: "3" },
+            { symbol: "₄", label: "4" },
+            { symbol: "₅", label: "5" },
+            { symbol: "₆", label: "6" },
+            { symbol: "₇", label: "7" },
+            { symbol: "₈", label: "8" },
+            { symbol: "₉", label: "9" },
+            { symbol: "₊", label: "plus" },
+            { symbol: "₋", label: "minus" },
+            { symbol: "₌", label: "equals" },
+            { symbol: "₍", label: "left parenthesis" },
+            { symbol: "₎", label: "right parenthesis" },
+            { symbol: "ₐ", label: "a" },
+            { symbol: "ₑ", label: "e" },
+            { symbol: "ₕ", label: "h" },
+            { symbol: "ᵢ", label: "i" },
+            { symbol: "ⱼ", label: "j" },
+            { symbol: "ₖ", label: "k" },
+            { symbol: "ₗ", label: "l" },
+            { symbol: "ₘ", label: "m" },
+            { symbol: "ₙ", label: "n" },
+            { symbol: "ₒ", label: "o" },
+            { symbol: "ₚ", label: "p" },
+            { symbol: "ᵣ", label: "r" },
+            { symbol: "ₛ", label: "s" },
+            { symbol: "ₜ", label: "t" },
+            { symbol: "ᵤ", label: "u" },
+            { symbol: "ᵥ", label: "v" },
+            { symbol: "ₓ", label: "x" },
         ],
     }
 
@@ -494,11 +588,11 @@ function QuestionsTab({database, setDatabase}) {
     // multer
     const [questionText, setQuestionText] = useState('');
     const [answer, setAnswerText] = useState('');
-    const [optionsText, setOptionsText] = useState(['', '', '', '']);
+    const [optionsText, setOptionsText] = useState(['', '', '', '', '']);
     const [questionImage, setQuestionImage] = useState(null);
-    const [optionImages, setOptionImages] = useState([null, null, null, null]);
+    const [optionImages, setOptionImages] = useState([null, null, null, null, null]);
     const [questionImageLink, setQuestionImageLink] = useState(null)
-
+    console.log(optionsText)
     // multer
     const [isAddingQuestion, setIsAddingQuestion] = useState(false)
     const [loadingforQuestionDelete, setLoadingforQuestionDelete] = useState({})
@@ -539,9 +633,9 @@ function QuestionsTab({database, setDatabase}) {
                     setLoadingForQuestionsAdd(false)
                     setQuestionText('')
                     setAnswerText('')
-                    setOptionsText(['', '', '', '']);
+                    setOptionsText(['', '', '', '', '']);
                     setQuestionImage(null)
-                    setOptionImages([null, null, null, null]);
+                    setOptionImages([null, null, null, null, null]);
                     toast({
                         title: data.msg,
                         variant: "success",
@@ -704,7 +798,10 @@ function QuestionsTab({database, setDatabase}) {
                                                     ? "B"
                                                     : key === "option3"
                                                         ? "C"
-                                                        : "D"}
+                                                        : key === "option4"
+                                                        ? "D"
+                                                            : "E"
+                                            }
                                               :
                                           </span>
                                                                                     <span>{option.text}</span>
@@ -732,7 +829,10 @@ function QuestionsTab({database, setDatabase}) {
                                                                                 ? "B"
                                                                                 : question.answer === "option3"
                                                                                     ? "C"
-                                                                                    : "D"}
+                                                                                    : question.answer === "option4"
+                                                                                    ? "D"
+                                                                                        : "E"
+                                                                        }
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -748,9 +848,9 @@ function QuestionsTab({database, setDatabase}) {
                                                             onClick={() => {
                                                                 setQuestionText("")
                                                                 setAnswerText("")
-                                                                setOptionsText(["", "", "", ""])
+                                                                setOptionsText(["", "", "", "", ""])
                                                                 setQuestionImage(null)
-                                                                setOptionImages([null, null, null, null])
+                                                                setOptionImages([null, null, null, null, null])
                                                             }}
                                                         >
                                                             <Plus className="mr-2 h-4 w-4"/> Savol Qo'shish
@@ -836,6 +936,7 @@ function QuestionsTab({database, setDatabase}) {
                                                                         <SelectItem value="option2">B</SelectItem>
                                                                         <SelectItem value="option3">C</SelectItem>
                                                                         <SelectItem value="option4">D</SelectItem>
+                                                                        <SelectItem value="option5">E</SelectItem>
                                                                     </SelectContent>
                                                                 </Select>
                                                             </div>

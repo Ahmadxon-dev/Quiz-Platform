@@ -96,6 +96,97 @@ function TestToPdf(props) {
     };
 
 
+    // const generateTestPDFs = async (variations) => {
+    //     const urls = [];
+    //
+    //     for (const [index, questions] of variations.entries()) {
+    //         const doc = new jsPDF();
+    //         const margin = 10;
+    //         const pageWidth = doc.internal.pageSize.width - 2 * margin;
+    //         const pageHeight = doc.internal.pageSize.height - 20;
+    //         const columnWidth = (pageWidth / 2) - 5;
+    //         let yLeft = 40;
+    //         let yRight = 40;
+    //         let isLeftColumn = true;
+    //
+    //         doc.setFontSize(16);
+    //         doc.text(`Test Variant-${index + 1}`, margin, 10);
+    //         doc.setFontSize(12);
+    //         doc.text("F.I.SH: ______________________", margin, 20);
+    //         doc.text("Sinf: _______________________", margin + 110, 20);
+    //         doc.text("Sana: _______________________", margin, 28);
+    //
+    //         for (const [i, q] of questions.entries()) {
+    //             let x = isLeftColumn ? margin : margin + columnWidth + 10;
+    //             let y = isLeftColumn ? yLeft : yRight;
+    //
+    //             doc.setFontSize(14);
+    //             const questionText = `${i + 1}. ${q.questionText}`;
+    //             const questionLines = doc.splitTextToSize(questionText, columnWidth);
+    //             let questionHeight = questionLines.length * 7;
+    //
+    //             // Add question image if available
+    //             if (q.questionImage) {
+    //                 const imageBase64 = await getBase64FromUrl(q.questionImage);
+    //                 doc.addImage(imageBase64, "JPEG", x, y, 40, 40);
+    //                 y += 45; // Adjust spacing for the image
+    //             }
+    //
+    //             if (y + questionHeight > pageHeight) {
+    //                 doc.addPage();
+    //                 yLeft = 20;
+    //                 yRight = 20;
+    //                 isLeftColumn = true;
+    //                 x = margin;
+    //                 y = yLeft;
+    //             }
+    //
+    //             doc.text(questionLines, x, y);
+    //             y += questionHeight;
+    //
+    //             doc.setFontSize(12);
+    //             for (const [j, optionKey] of Object.keys(q.options).entries()) {
+    //                 const option = q.options[optionKey];
+    //                 const optionText = `${String.fromCharCode(65 + j)}) ${option.text}`;
+    //                 const optionLines = doc.splitTextToSize(optionText, columnWidth - 5);
+    //                 let optionHeight = optionLines.length * 6;
+    //
+    //                 // Add option image if available
+    //                 if (option.image) {
+    //                     const imageBase64 = await getBase64FromUrl(option.image);
+    //                     doc.addImage(imageBase64, "JPEG", x + 5, y, 30, 30);
+    //                     y += 35; // Adjust spacing for the image
+    //                 }
+    //
+    //                 if (y + optionHeight > pageHeight) {
+    //                     doc.addPage();
+    //                     yLeft = 20;
+    //                     yRight = 20;
+    //                     isLeftColumn = true;
+    //                     x = margin;
+    //                     y = yLeft;
+    //                 }
+    //
+    //                 doc.text(optionLines, x + 5, y);
+    //                 y += optionHeight + 4;
+    //             }
+    //
+    //             if (isLeftColumn) {
+    //                 yLeft = y + 10;
+    //             } else {
+    //                 yRight = y + 10;
+    //             }
+    //             isLeftColumn = !isLeftColumn;
+    //         }
+    //
+    //         const blob = doc.output("blob");
+    //         const url = URL.createObjectURL(blob);
+    //         urls.push({ url, name: `${index + 1}.pdf` });
+    //     }
+    //
+    //     setPdfUrls(urls);
+    // };
+
     const generateTestPDFs = async (variations) => {
         const urls = [];
 
@@ -125,20 +216,26 @@ function TestToPdf(props) {
                 const questionLines = doc.splitTextToSize(questionText, columnWidth);
                 let questionHeight = questionLines.length * 7;
 
-                // Add question image if available
+                // Calculate space required for the question
+                let requiredHeight = questionHeight;
+
                 if (q.questionImage) {
-                    const imageBase64 = await getBase64FromUrl(q.questionImage);
-                    doc.addImage(imageBase64, "JPEG", x, y, 40, 40);
-                    y += 45; // Adjust spacing for the image
+                    requiredHeight += 45; // Reserve space for the image
                 }
 
-                if (y + questionHeight > pageHeight) {
+                if (y + requiredHeight > pageHeight) {
                     doc.addPage();
                     yLeft = 20;
                     yRight = 20;
                     isLeftColumn = true;
                     x = margin;
                     y = yLeft;
+                }
+
+                if (q.questionImage) {
+                    const imageBase64 = await getBase64FromUrl(q.questionImage);
+                    doc.addImage(imageBase64, "JPEG", x, y, 40, 40);
+                    y += 45;
                 }
 
                 doc.text(questionLines, x, y);
@@ -150,21 +247,22 @@ function TestToPdf(props) {
                     const optionText = `${String.fromCharCode(65 + j)}) ${option.text}`;
                     const optionLines = doc.splitTextToSize(optionText, columnWidth - 5);
                     let optionHeight = optionLines.length * 6;
+                    let optionImageHeight = option.image ? 35 : 0;
 
-                    // Add option image if available
-                    if (option.image) {
-                        const imageBase64 = await getBase64FromUrl(option.image);
-                        doc.addImage(imageBase64, "JPEG", x + 5, y, 30, 30);
-                        y += 35; // Adjust spacing for the image
-                    }
-
-                    if (y + optionHeight > pageHeight) {
+                    // Check if option fits, otherwise start a new page
+                    if (y + optionHeight + optionImageHeight > pageHeight) {
                         doc.addPage();
                         yLeft = 20;
                         yRight = 20;
                         isLeftColumn = true;
                         x = margin;
                         y = yLeft;
+                    }
+
+                    if (option.image) {
+                        const imageBase64 = await getBase64FromUrl(option.image);
+                        doc.addImage(imageBase64, "JPEG", x + 5, y, 30, 30);
+                        y += 35;
                     }
 
                     doc.text(optionLines, x + 5, y);
@@ -210,8 +308,9 @@ function TestToPdf(props) {
             for (let i = 0; i < variations[index].length; i++) {
                 const q = variations[index][i];
                 const questionIndex = Object.keys(q.options).indexOf(q.answer);
-                const answerLetter = ["A", "B", "C", "D"][questionIndex] || "?";
-                const answerText = `${i + 1}. (${answerLetter}) ${q.options[q.answer].text}`;
+                const answerLetter = ["A", "B", "C", "D", "E"][questionIndex] || "?";
+                const answerText = `${i + 1}. (${answerLetter})`;
+                // const answerText = `${i + 1}. (${answerLetter}) ${q.options[q.answer].text}`;
                 const wrappedText = doc.splitTextToSize(answerText, pageWidth);
 
                 if (y + wrappedText.length * 7 > pageHeight) {
@@ -223,16 +322,16 @@ function TestToPdf(props) {
                 y += wrappedText.length * 7 + 5; // Dynamic spacing
 
                 // Check if the answer has an image
-                if (q.options[q.answer].image) {
-                    const imageUrl = q.options[q.answer].image;
-                    try {
-                        const imgData = await getBase64FromUrl(imageUrl);
-                        doc.addImage(imgData, "PNG", 15, y, 40, 40); // Adjust size as needed
-                        y += 45;
-                    } catch (error) {
-                        console.error("Error loading image:", error);
-                    }
-                }
+                // if (q.options[q.answer].image) {
+                //     const imageUrl = q.options[q.answer].image;
+                //     try {
+                //         const imgData = await getBase64FromUrl(imageUrl);
+                //         doc.addImage(imgData, "PNG", 15, y, 40, 40); // Adjust size as needed
+                //         y += 45;
+                //     } catch (error) {
+                //         console.error("Error loading image:", error);
+                //     }
+                // }
             }
 
             y += 10; // Extra space after each test variant

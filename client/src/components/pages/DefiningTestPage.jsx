@@ -37,17 +37,12 @@ function DefiningTestPage(props) {
     selectedSubtopics.forEach(subtopic => {
         selectedSubTopicNames.push(subtopic.subtopicname)
     })
-    console.log(selectedTopicData)
-    console.log(selectedSubTopicNames)
-    console.log(numQuestions)
-    console.log("time " , +time.soat * 60 * 60 + +time.daqiqa * 60 + +time.soniya )
     const getFullDb = async () => {
         await fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
             .then(res => res.json())
             .then(data => {
                 setLoading(false)
                 setTopicsData(data)
-                console.log(data)
             })
     }
     useEffect(() => {

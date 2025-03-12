@@ -359,10 +359,10 @@ function TestPage() {
         <Card className="w-[90%] mx-auto">
             <CardHeader className="border-b pb-4">
                 <div className="flex flex-col md:flex-row justify-between items-center">
-                    <h2 className="text-xl font-medium">
-                        {hours < 10 ? `0${hours}` : hours}:{minutes < 10 ? `0${minutes}` : minutes}:
-                        {seconds < 10 ? `0${seconds}` : seconds}
-                    </h2>
+                    {/*<h2 className="text-xl font-medium">*/}
+                    {/*    {hours < 10 ? `0${hours}` : hours}:{minutes < 10 ? `0${minutes}` : minutes}:*/}
+                    {/*    {seconds < 10 ? `0${seconds}` : seconds}*/}
+                    {/*</h2>*/}
                     <CardTitle className="text-2xl md:text-3xl font-bold text-center my-2 md:my-0">
                         {test.subtopicname.map((subtopic, index) => (
                             <span key={subtopic}>
@@ -434,7 +434,11 @@ function TestPage() {
                 {/* Question navigation card on the right */}
                 <div className="w-full md:w-64 p-4 border-l border-gray-200">
                     <div className="sticky top-4">
-                        <h3 className="text-lg font-medium mb-4 text-center">Savollar</h3>
+                        <h2 className="text-2xl text-center mb-4  font-medium">
+                            {hours < 10 ? `0${hours}` : hours}:{minutes < 10 ? `0${minutes}` : minutes}:
+                            {seconds < 10 ? `0${seconds}` : seconds}
+                        </h2>
+                        {/*<h3 className="text-lg font-medium mb-4 text-center">Savollar</h3>*/}
                         <div className="grid grid-cols-5 gap-4 sm:gap-2 mb-6">
                             {test.questions.map((_, index) => (
                                 <Button
