@@ -16,7 +16,7 @@ function NotFoundPage(props) {
                 <div className="h-px w-full bg-border" />
 
                 <Button asChild variant="outline" className="gap-2 group">
-                    <Link href="/">
+                    <Link to="/">
                         <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                         <span>Bosh Sahifaga Qaytish</span>
                     </Link>

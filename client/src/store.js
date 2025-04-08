@@ -7,7 +7,7 @@ const store = configureStore({
         test: testSlice,
         user: userSlice,
     },
-    devTools: true,
+    devTools: import.meta.env.VITE_NODE_ENV !== 'production',
 });
 
 export default store;

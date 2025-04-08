@@ -14,7 +14,6 @@ h1 {
 
 
 body{
-
   @apply !min-w-full; /*for select responsiveness */
 }
 

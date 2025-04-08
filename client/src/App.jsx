@@ -1,71 +1,85 @@
 import {Button} from "@/components/ui/button.jsx";
 import Navbar from "@/components/layout/Navbar.jsx";
-import {useDispatch, useSelector} from "react-redux";
+import {useDispatch} from "react-redux";
 import {increment, setUser} from "@/features/user/userSlice.js";
 import LoginForm from "@/components/layout/LoginForm.jsx";
 import SignupForm from "@/components/layout/SignupForm.jsx";
 import {Navigate, Route, Routes, useLocation, useNavigate} from "react-router-dom";
-import HomePage from "@/components/pages/HomePage.jsx";
-import React, {useEffect} from "react";
-import DefiningTestPage from "@/components/pages/DefiningTestPage.jsx";
+import React, {lazy, Suspense, useEffect, useState} from "react";
 import TestPage from "@/components/pages/TestPage.jsx";
-import ResultsPage from "@/components/pages/ResultsPage.jsx";
-import EachResultPage from "@/components/pages/EachResultPage.jsx";
-import UsersPage from "@/components/pages/UsersPage.jsx";
-import TestToPdf from "@/components/pages/TestToPdf.jsx";
-import AddTopicsPage from "@/components/pages/AddTopicsPage.jsx";
-import SettingsPage from "@/components/pages/SettingsPage.jsx";
-import AllResultsPage from "@/components/pages/AllResultsPage.jsx";
-import NotFoundPage from "@/components/pages/NotFoundPage.jsx";
+import Loader from "@/components/ui/Loader.jsx";
+import {useQuery} from "@tanstack/react-query";
 
+const AddTopicsPage = lazy(()=> import("./components/pages/AddTopicsPage.jsx"))
+const NotFoundPage = lazy(()=> import("./components/pages/NotFoundPage.jsx"))
+const AllResultsPage = lazy(()=> import("./components/pages/AllResultsPage.jsx"))
+const SettingsPage = lazy(()=> import("./components/pages/SettingsPage.jsx"))
+const TestToPdf = lazy(()=> import("./components/pages/TestToPdf.jsx"))
+const UsersPage = lazy(()=> import("./components/pages/UsersPage.jsx"))
+const EachResultPage = lazy(()=> import("./components/pages/EachResultPage.jsx"))
+const ResultsPage = lazy(()=> import("./components/pages/ResultsPage.jsx"))
+const DefiningTestPage = lazy(()=> import("./components/pages/DefiningTestPage.jsx"))
+const HomePage = lazy(()=> import("./components/pages/HomePage.jsx"))
+
+
+const fetchUser = async (token) => {
+    const response = await fetch(`${import.meta.env.VITE_SERVER}/auth/getuser/${token}`);
+    if (!response.ok) {
+        throw new Error("Failed to fetch user data");
+    }
+    return response.json();
+};
+
+const useAuthUser = (token) => {
+    return useQuery({
+        queryKey: ["authUser", token],
+        queryFn: () => fetchUser(token),
+        enabled: !!token, // Ensures the query only runs if `token` exists
+        retry: false, // Avoids retrying if request fails
+    });
+};
 
 function App() {
-    const user = useSelector((state) => state.user);
     const dispatch = useDispatch();
     const location = useLocation()
     const token = localStorage.getItem("token")
     const navigate = useNavigate()
+    const { data, isError } = useAuthUser(token);
 
-
-    useEffect(()=>{
-        if (token){
-            fetch(`${import.meta.env.VITE_SERVER}/auth/getuser`, {
-                method:"post",
-                headers:{
-                    "Content-Type":"application/json"
-                },
-                body:JSON.stringify({
-                    token
-                })
-            })
-                .then(res=>res.json())
-                .then(data=>{
-                    dispatch(setUser(data))
-                })
-        }else{
-            return navigate("/signin")
+    useEffect(() => {
+        if (!token || isError) {
+            navigate("/signin");
         }
-    }, [])
+    }, [token, isError, navigate]);
+
+    useEffect(() => {
+        if (data) {
+            dispatch(setUser(data));
+        }
+    }, [data, dispatch]);
+
   return (
     <>
 
-        {/*<SignupForm/>*/}
         {location.pathname!== "/signup" && location.pathname!== "/signin" && <Navbar />}
-        <Routes>
-            <Route path={"/"} element={<HomePage/>} />
-            <Route path={"/definetest"} element={<DefiningTestPage/>}/>
-            <Route path={"/test/:testId"} element={<TestPage/>} />
-            <Route path={"/signup"} element={<SignupForm/>} />
-            <Route path={"/signin"} element={<LoginForm/>} />
-            <Route path={"/results"} element={<ResultsPage />} />
-            <Route path={"/results/:testId"} element={<EachResultPage />} />
-            <Route path={"/users"} element={<UsersPage />} />
-            <Route path={`/testtopdf`} element={<TestToPdf />} />
-            <Route path={"/addtopic"} element={<AddTopicsPage />} />
-            <Route path={"/profile/settings"} element={<SettingsPage />} />
-            <Route path={"/allresults"} element={<AllResultsPage />}/>
-            <Route path={"*"} element={<NotFoundPage />} />
-        </Routes>
+
+        <Suspense fallback={<Loader variant={"big"} />}>
+            <Routes>
+                <Route path={"/"} element={<HomePage/>} />
+                <Route path={"/definetest"} element={<DefiningTestPage/>}/>
+                <Route path={"/test/:testId"} element={<TestPage/>} />
+                <Route path={"/signup"} element={<SignupForm/>} />
+                <Route path={"/signin"} element={<LoginForm/>} />
+                <Route path={"/results"} element={<ResultsPage />} />
+                <Route path={"/results/:testId"} element={<EachResultPage />} />
+                <Route path={"/users"} element={<UsersPage />} />
+                <Route path={`/testtopdf`} element={<TestToPdf />} />
+                <Route path={"/addtopic"} element={<AddTopicsPage/>} />
+                <Route path={"/profile/settings"} element={<SettingsPage />} />
+                <Route path={"/allresults"} element={<AllResultsPage />}/>
+                <Route path={"*"} element={<NotFoundPage />} />
+            </Routes>
+        </Suspense>
     </>
   )
 }

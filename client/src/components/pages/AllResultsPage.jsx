@@ -9,12 +9,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge"
 import {Link, useNavigate} from "react-router-dom";
 import {useSelector} from "react-redux";
+import Loader from "@/components/ui/Loader.jsx";
 
 function AllResultsPage(props) {
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("date")
     const [sortDirection, setSortDirection] = useState("desc")
     const [quizResults,setData] = useState([])
+    const [loading, setLoading] = useState(true)
     const user = useSelector(state => state.user)
     const navigate = useNavigate()
     if (user.role === "user" || user.role === "admin") {
@@ -26,7 +28,6 @@ function AllResultsPage(props) {
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
 
-    // Fetch data and transform it to the desired format
     const getData = async () => {
         await fetch(`${import.meta.env.VITE_SERVER}/test/all-results`)
             .then(res => res.json())
@@ -43,7 +44,7 @@ function AllResultsPage(props) {
                         timeSpent: formatTime(result.remainingTime),
                     }
                 });
-
+                setLoading(false)
                 setData(transformedData.filter(item=> item.role!=="bosh admin"));
             })
     }
@@ -51,60 +52,6 @@ function AllResultsPage(props) {
     useEffect(() => {
         getData();
     }, [])
-    // Mock data for quiz results
-    // const quizResults = [
-    //     {
-    //         id: 1,
-    //         userName: "John Smith",
-    //         date: "2023-05-15",
-    //         role: "User",
-    //         topics: ["Mathematics", "Algebra"],
-    //         questions: 20,
-    //         score: 18,
-    //         timeSpent: "15:30",
-    //     },
-    //     {
-    //         id: 2,
-    //         userName: "Emily Johnson",
-    //         date: "2023-05-14",
-    //         role: "User",
-    //         topics: ["Science", "Biology"],
-    //         questions: 25,
-    //         score: 22,
-    //         timeSpent: "22:45",
-    //     },
-    //     {
-    //         id: 3,
-    //         userName: "Michael Brown",
-    //         date: "2023-05-13",
-    //         role: "Admin",
-    //         topics: ["History", "World War II"],
-    //         questions: 15,
-    //         score: 15,
-    //         timeSpent: "12:15",
-    //     },
-    //     {
-    //         id: 4,
-    //         userName: "Sarah Davis",
-    //         date: "2023-05-12",
-    //         role: "User",
-    //         topics: ["English", "Literature"],
-    //         questions: 30,
-    //         score: 25,
-    //         timeSpent: "28:10",
-    //     },
-    //     {
-    //         id: 5,
-    //         userName: "David Wilson",
-    //         date: "2023-05-11",
-    //         role: "User",
-    //         topics: ["Geography", "Continents"],
-    //         questions: 20,
-    //         score: 16,
-    //         timeSpent: "18:45",
-    //     },
-    //
-    // ]
 
     const sortData = (data, sortBy, direction) => {
         return [...data].sort((a, b) => {
@@ -155,13 +102,13 @@ function AllResultsPage(props) {
         return date.toLocaleDateString() + ", " + date.toLocaleTimeString()
     }
 
+    if (loading){
+        return <Loader variant={"big"} />
+    }
+
     return (
         <div className="min-h-screen bg-gray-100">
             <div className="container mx-auto py-6 px-4">
-                {/*<div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">*/}
-                {/*    <h1 className="text-3xl font-bold text-white mb-2">Quiz Results Dashboard</h1>*/}
-                {/*    <p className="text-blue-100">Track performance and analyze quiz outcomes</p>*/}
-                {/*</div>*/}
 
                 <div className="grid gap-6 mb-8 md:grid-cols-3">
                     <Card className="border-t-4 border-blue-500 overflow-hidden">
@@ -264,8 +211,8 @@ function AllResultsPage(props) {
                                                     variant={result.role === "admin" ? "secondary" : "default"}
                                                     className={
                                                         result.role === "admin"
-                                                            ? "bg-purple-500 hover:bg-purple-600"
-                                                            : "bg-blue-500 hover:bg-blue-600"
+                                                            ? "bg-yellow-500 hover:bg-yellow-700"
+                                                            : "bg-green-600 hover:bg-green-800"
                                                     }
                                                 >
                                                     {result.role}
@@ -277,7 +224,7 @@ function AllResultsPage(props) {
                                                         <Badge
                                                             key={index}
                                                             variant="outline"
-                                                            className="text-xs border-blue-300 text-blue-700 bg-blue-50"
+                                                            className="text-xs border-slate-300 text-slate-700 bg-slate-50"
                                                         >
                                                             {topic}
                                                         </Badge>

@@ -78,11 +78,11 @@ function SettingsPage(props) {
                     <TabsList className="grid w-full grid-cols-2 mb-8">
                         <TabsTrigger value="personal" className="text-sm sm:text-base">
                             <User className="w-4 h-4 mr-2"/>
-                            Shaxsiy ma&apos;lumotlar
+                            Shaxsiy ma'lumotlar
                         </TabsTrigger>
                         <TabsTrigger value="security" className="text-sm sm:text-base">
                             <Lock className="w-4 h-4 mr-2"/>
-                            Security
+                            Xavfsizlik
                         </TabsTrigger>
                     </TabsList>
 

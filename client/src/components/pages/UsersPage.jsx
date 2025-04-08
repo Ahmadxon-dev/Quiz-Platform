@@ -7,25 +7,40 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {useSelector} from "react-redux";
 import {useNavigate} from "react-router-dom";
 import {useToast} from "@/hooks/use-toast.js";
-import {
-    Dialog, DialogClose,
-    DialogContent,
-    DialogDescription, DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import {Label} from "@/components/ui/label.jsx";
-import {Input} from "@/components/ui/input.jsx";
 import {Card} from "@/components/ui/card.jsx";
+import {useQuery} from "@tanstack/react-query";
 
+
+
+const fetchUsers = async () => {
+    const res = await fetch(`${import.meta.env.VITE_SERVER}/user/get-users`);
+    if (!res.ok) {
+        throw new Error('Failed to fetch users');
+    }
+    return res.json();
+};
+
+const useUsers = (user) => {
+    return useQuery({
+        queryKey: ['users'],
+        queryFn: fetchUsers,
+        select: (data) => {
+            if (!user) return [];
+            if (user.role === 'admin') {
+                return data.filter(user => user.role === 'user');
+            } else if (user.role === 'bosh admin') {
+                return data.filter(user => user.role !== 'bosh admin');
+            }
+            return data;
+        },
+        enabled: !!user // Only fetch when user exists
+    });
+};
 function UsersPage(props) {
     const [allUsers, setAllUsers] = useState([])
     const [loading, setLoading] = useState(true)
@@ -35,28 +50,41 @@ function UsersPage(props) {
     const {toast} = useToast()
     const user = useSelector(state => state.user)
     const navigate = useNavigate()
+    const { data: fetchedUsers, isLoading } = useUsers(user);
     if (user.role === "user") {
         navigate("/")
     }
-    const getUsers = async () => {
-        const res = await fetch(`${import.meta.env.VITE_SERVER}/user/get-users`)
-        const data = await res.json()
-        let filteredUsers = []
-        if (user.role === "admin") {
-            filteredUsers = data.filter(user => user.role === "user")
-        } else if (user.role === "bosh admin") {
-            filteredUsers = data.filter(user => user.role !== "bosh admin")
+    // const getUsers = async () => {
+    //     const res = await fetch(`${import.meta.env.VITE_SERVER}/user/get-users`)
+    //     const data = await res.json()
+    //     let filteredUsers = []
+    //     if (user.role === "admin") {
+    //         filteredUsers = data.filter(user => user.role === "user")
+    //     } else if (user.role === "bosh admin") {
+    //         filteredUsers = data.filter(user => user.role !== "bosh admin")
+    //     }
+    //     setAllUsers(filteredUsers)
+    //     setLoading(false)
+    // }
+
+    // useEffect(() => {
+    //     getUsers()
+    //     if(user){
+    //         setRole(user.role)
+    //     }
+    // }, [user])
+    useEffect(() => {
+        if (fetchedUsers) {
+            setAllUsers(fetchedUsers);
         }
-        setAllUsers(filteredUsers)
-        setLoading(false)
-    }
+    }, [fetchedUsers]);
 
     useEffect(() => {
-        getUsers()
-        if(user){
-            setRole(user.role)
+        if (user) {
+            setRole(user.role);
         }
-    }, [user])
+    }, [user]);
+
 
     const handleDelete = async (userId) => {
         setLoadingUserId(userId)
@@ -141,7 +169,7 @@ function UsersPage(props) {
                 setAllUsers(filteredUsers)
             })
     }
-    if (loading) {
+    if (isLoading) {
         return (
             <div className={`grid items-center justify-center m-auto`}>
                 <Loader2 className="mr-2 h-20 w-20 animate-spin"/>
@@ -201,10 +229,6 @@ function UsersPage(props) {
                                                                     <DropdownMenuItem  onClick={()=>roleToUser(user.email)}>Admin {"->"} User</DropdownMenuItem>
                                                                 }
 
-                                                                {/*<DropdownMenuItem>Profile</DropdownMenuItem>*/}
-                                                                {/*<DropdownMenuItem>Billing</DropdownMenuItem>*/}
-                                                                {/*<DropdownMenuItem>Team</DropdownMenuItem>*/}
-                                                                {/*<DropdownMenuItem>Subscription</DropdownMenuItem>*/}
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>)
                                                     }

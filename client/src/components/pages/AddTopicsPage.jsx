@@ -21,30 +21,30 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 import {Label} from "@/components/ui/label.jsx";
 import {useNavigate} from "react-router-dom";
 import {useSelector} from "react-redux";
+import Loader from "@/components/ui/Loader.jsx";
+import {useQuery} from "@tanstack/react-query";
 
 
-function AddTopicsPage(props) {
+function AddTopicsPage() {
     const [database, setDatabase] = useState([])
-    const [loading, setLoading] = useState(true)
-    const {toast} = useToast()
+    // const {toast} = useToast()
     const user = useSelector(state => state.user)
     const navigate = useNavigate()
     if (user.role === "user") {
         navigate("/")
     }
-    const getData = async () => {
-        await fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`,)
-            .then(res => res.json())
-            .then(data => {
-                setDatabase(data)
-                setLoading(false)
-            })
-    }
+    const { isPending, error, data } = useQuery({
+        queryKey: ['test/getfulltestdb'],
+        queryFn: () =>
+            fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
+                .then((res) => res.json())
+    })
     useEffect(() => {
-        getData()
-    }, [])
-
-    if (loading) {
+        if (data) {
+            setDatabase(data);
+        }
+    }, [data]);
+    if (isPending) {
         return (
             <div className={`grid items-center justify-center m-auto`}>
                 <Loader2 className="mr-2 h-20 w-20 animate-spin"/>
@@ -226,6 +226,7 @@ function SubtopicsTab({database, setDatabase}) {
     const [newSubTopic, setNewSubTopic] = useState("")
     const [loadingforSubtopicsAdd, setLoadingforSubtopicsAdd] = useState(false)
     const [loadingforSubtopicsDelete, setLoadingforSubtopicsDelete] = useState({})
+    const [loadingforSubtopicsEdit, setLoadingforSubtopicsEdit] = useState({})
     const [editSubTopic, setEditSubTopic] = useState("")
     const {toast} = useToast()
     const addSubtopic = async (mainTopicId) => {
@@ -295,6 +296,7 @@ function SubtopicsTab({database, setDatabase}) {
             })
             return
         }
+        setLoadingforSubtopicsEdit((prev) => ({...prev, [oldSubTopicName]: true}));
         await fetch(`${import.meta.env.VITE_SERVER}/test/subtopics/edit`, {
             method: "put",
             headers: {
@@ -315,6 +317,7 @@ function SubtopicsTab({database, setDatabase}) {
                     duration: 4000,
                 })
                 setEditSubTopic("")
+                setLoadingforSubtopicsEdit((prev) => ({...prev, [oldSubTopicName]: false}));
             })
     }
     return (
@@ -345,14 +348,13 @@ function SubtopicsTab({database, setDatabase}) {
                                                     <Input placeholder="Mavzu nomi" defaultValue={subtopic.subtopicname}
                                                            onChange={e => setEditSubTopic(e.target.value)}/>
                                                     <DialogFooter>
-                                                        <DialogClose asChild>
                                                             <Button
                                                                 type="submit"
                                                                 onClick={() => updateSubTopic(topic._id, subtopic.subtopicname,)}
                                                             >
+                                                                {loadingforSubtopicsEdit[subtopic.subtopicname] && <Loader2 className="ml-2 h-4 w-4 animate-spin"/>}
                                                                 O'zgartirish
                                                             </Button>
-                                                        </DialogClose>
                                                     </DialogFooter>
                                                 </DialogContent>
                                             </Dialog>
@@ -380,7 +382,6 @@ function SubtopicsTab({database, setDatabase}) {
                                         <Input placeholder="Subtopic name" id={`new-subtopic-${topicIndex}`}
                                                value={newSubTopic} onChange={e => setNewSubTopic(e.target.value)}/>
                                         <DialogFooter>
-                                            <DialogClose asChild>
                                                 <Button
                                                     type="submit"
                                                     onClick={() => addSubtopic(topic._id)}
@@ -390,7 +391,6 @@ function SubtopicsTab({database, setDatabase}) {
                                                         <Loader2 className="ml-2 h-4 w-4 animate-spin"/>}
                                                     Qo'shish
                                                 </Button>
-                                            </DialogClose>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
@@ -409,6 +409,7 @@ function MathSymbolsToolbar({onInsertSymbol}) {
             {symbol: "π", label: "Pi"},
             {symbol: "±", label: "Plus-minus"},
             {symbol: "•", label: "Multiply"},
+            {symbol: "×", label: "Multiply2"},
             {symbol: "÷", label: "Divide"},
             {symbol: "=", label: "Equals"},
             {symbol: "≠", label: "Not equals"},
@@ -418,7 +419,7 @@ function MathSymbolsToolbar({onInsertSymbol}) {
         Funksiyalar: [
             {symbol: "sin()", label: "Sine"},
             {symbol: "cos()", label: "Cosine"},
-            {symbol: "tan()", label: "Tangent"},
+            {symbol: "tg()", label: "Tangent"},
             {symbol: "log()", label: "Logarithm"},
             {symbol: "ln()", label: "Natural log"},
             {symbol: "√()", label: "Square root"},
@@ -592,7 +593,6 @@ function QuestionsTab({database, setDatabase}) {
     const [questionImage, setQuestionImage] = useState(null);
     const [optionImages, setOptionImages] = useState([null, null, null, null, null]);
     const [questionImageLink, setQuestionImageLink] = useState(null)
-    console.log(optionsText)
     // multer
     const [isAddingQuestion, setIsAddingQuestion] = useState(false)
     const [loadingforQuestionDelete, setLoadingforQuestionDelete] = useState({})
@@ -617,7 +617,6 @@ function QuestionsTab({database, setDatabase}) {
         optionsText.forEach((option, idx) => formData.append('optionsText[]', option));
 
         if (questionImage) formData.append('questionImage', questionImage);
-        // if (answerImage) formData.append('answerImage', answerImage);
         optionImages.forEach((image, idx) => {
             if (image) formData.append('optionImages', image);
         });
@@ -948,13 +947,14 @@ function QuestionsTab({database, setDatabase}) {
                                                                         onClick={() => setIsAddingQuestion(false)}>
                                                                     Chiqish
                                                                 </Button>
+                                                            </DialogClose>
                                                                 <Button
                                                                     onClick={() => handleSubmitWithImage(topic._id, subtopic.subtopicname)}
                                                                     disabled={loadingForQuestionsAdd}
                                                                 >
                                                                     Savol qo'shish
+                                                                    {loadingForQuestionsAdd && <Loader variant={"small"}/> }
                                                                 </Button>
-                                                            </DialogClose>
                                                         </DialogFooter>
                                                     </DialogContent>
                                                 </Dialog>

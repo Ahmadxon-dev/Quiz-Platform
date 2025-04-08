@@ -3,7 +3,6 @@ import {useSelector} from "react-redux";
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
@@ -14,16 +13,31 @@ import { Badge } from "@/components/ui/badge"
 import {Link} from "react-router-dom";
 import {Loader2, Eye, ChevronLeft, ChevronRight, Clock, Mail} from "lucide-react";
 import {Button} from "@/components/ui/button.jsx";
+import {useQuery} from "@tanstack/react-query";
 
 
+const fetchResults = async (email) => {
+    const response = await fetch(`${import.meta.env.VITE_SERVER}/test/results/${email}`);
+    if (!response.ok) {
+        throw new Error("Failed to fetch results");
+    }
+    return response.json();
+};
+
+const useTestResults = (email) => {
+    return useQuery({
+        queryKey: ["test/results", email], // Ensure uniqueness for caching
+        queryFn: () => fetchResults(email),
+        enabled: !!email, // Prevents execution if email is undefined/null
+    });
+};
 function ResultsPage(props) {
-    const [data, setData] = useState([])
     const user = useSelector(state => state.user)
-    const [loading, setLoading] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 6
-    const totalPages =!loading && Math.ceil(data.length / itemsPerPage)
-    const paginatedData =!loading && data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    const { data, isPending, isError } = useTestResults(user?.email);
+    const totalPages =!isPending && Math.ceil(data.length / itemsPerPage)
+    const paginatedData =!isPending && data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
     const getPercentageColor = (percentage) => {
         if (percentage >= 80) return "bg-green-500"
@@ -42,19 +56,20 @@ function ResultsPage(props) {
         const end = new Date(updatedAt).getTime()
         return formatDuration(Math.floor((end - start) / 1000))
     }
-    const getResults = async () => {
-        await fetch(`${import.meta.env.VITE_SERVER}/test/results/${user.email}`)
-            .then(res => res.json())
-            .then(data => {
-                setData(data)
-                setLoading(false)
-                console.log(data)
-            })
-    }
-    useEffect(() => {
-        getResults()
-    }, [user])
-    if (loading) {
+    // const getResults = async () => {
+    //     await fetch(`${import.meta.env.VITE_SERVER}/test/results/${user.email}`)
+    //         .then(res => res.json())
+    //         .then(data => {
+    //             setData(data)
+    //             setLoading(false)
+    //             console.log(data)
+    //         })
+    // }
+    // useEffect(() => {
+    //     getResults()
+    // }, [user])
+
+    if (isPending) {
         return (
             <div className={`grid items-center justify-center m-auto`}>
                 <Loader2 className="mr-2 h-20 w-20 animate-spin"/>
@@ -148,42 +163,6 @@ function ResultsPage(props) {
                     )}
                 </CardContent>
             </Card>
-
-            {/*{data && (*/}
-            {/*    <Table*/}
-            {/*        className={`xl:w-[60vw] w-full my-20 text-lg  border-2  border-gray-200 rounded mx-auto`}>*/}
-            {/*        /!*<TableCaption>A list of your recent invoices.</TableCaption>*!/*/}
-
-            {/*        {*/}
-            {/*            (data.length !== 0) && (*/}
-            {/*                <>*/}
-            {/*                    <TableHeader>*/}
-            {/*                        <TableRow>*/}
-            {/*                            <TableHead className="w-[100px]">Savollar Soni</TableHead>*/}
-            {/*                            <TableHead>To'g'ri javoblar</TableHead>*/}
-            {/*                            <TableHead>Foiz</TableHead>*/}
-            {/*                            <TableHead>Sanasi</TableHead>*/}
-            {/*                            <TableHead>Amallar</TableHead>*/}
-            {/*                        </TableRow>*/}
-            {/*                    </TableHeader>*/}
-            {/*                    <TableBody>*/}
-            {/*                        {data.map(item => {*/}
-            {/*                            return <TableRow className={``} key={item._id}>*/}
-            {/*                                <TableCell className="font-medium">{item.questions.length}</TableCell>*/}
-            {/*                                <TableCell>{item.result}</TableCell>*/}
-            {/*                                <TableCell>{Math.round(item.result / item.questions.length * 100)} %</TableCell>*/}
-            {/*                                <TableCell>{item.createdAt.toLocaleString()}</TableCell>*/}
-            {/*                                <TableCell><Link className={`underline`} to={item._id}>Ko'rish(hozircha ishlamaydi)</Link></TableCell>*/}
-            {/*                            </TableRow>;*/}
-            {/*                        })}*/}
-
-            {/*                    </TableBody>*/}
-            {/*                </>*/}
-            {/*            )}*/}
-            {/*        {data.length === 0 && <h1 className={`text-lg text-center`}>Hozircha hech qanday natija yo'q</h1>}*/}
-            {/*    </Table>*/}
-            {/*)*/}
-            {/*}*/}
 
             </div>
         </div>

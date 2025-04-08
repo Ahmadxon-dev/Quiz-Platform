@@ -6,18 +6,21 @@ import {Input} from "@/components/ui/input.jsx";
 import {Button} from "@/components/ui/button.jsx";
 import {Link, useNavigate} from "react-router-dom";
 import {useToast} from "@/hooks/use-toast.js";
-import {Loader2} from "lucide-react";
+import {Eye, EyeOff, Loader2} from "lucide-react";
 
 function SignupForm(props) {
-    // console.log(import.meta.env.VITE_SERVER)
     const [loading, setLoading] = useState(false)
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const {toast} = useToast()
     const navigate = useNavigate()
+    const [showPassword, setShowPassword] = useState(false)
 
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword)
+    }
     const handleSubmit =()=>{
         if (!email || !name || !password){
             toast({
@@ -103,13 +106,30 @@ function SignupForm(props) {
                                 <div className="flex items-center">
                                     <Label htmlFor="password">Parol</Label>
                                 </div>
-                                <Input id="password"
-                                       type="password"
-                                       value={password}
-                                       placeholder={"********"}
-                                       onChange={e => setPassword(e.target.value)}
-                                       required
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        placeholder="********"
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                        onClick={togglePasswordVisibility}
+                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                        ) : (
+                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
                             <Button onClick={handleSubmit} type="button" className="w-full">
                                 Ro'yxatdan o'tish

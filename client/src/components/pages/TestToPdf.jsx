@@ -8,62 +8,66 @@ import {Input} from "@/components/ui/input.jsx";
 import {Download, FileText, Loader2, Minus, Plus} from "lucide-react";
 import {Card, CardContent} from "@/components/ui/card.jsx";
 import {useToast} from "@/hooks/use-toast.js";
+import QRCode from 'qrcode';
+import CryptoJS from 'crypto-js'; // Import crypto-js for encryption/decryption
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion.jsx";
+import Loader from "@/components/ui/Loader.jsx";
+import {useQuery} from "@tanstack/react-query";
+import {generateAnswersWord, generateTestWordDocs} from "@/hooks/test-word-generation.js";
 
-function TestToPdf(props) {
+const secretKey = `${import.meta.env.VITE_SECRET_KEY}`;
+
+const encryptData = (data) => {
+    return CryptoJS.AES.encrypt(data, secretKey).toString();
+};
+
+const decryptData = (encryptedData) => {
+    try {
+        const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+        return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+        console.error("Decryption error:", error);
+        return null;
+    }
+};
+
+function TestToPdf() {
     const [selectedSubtopics, setSelectedSubtopics] = useState([]);
     const [openTopics, setOpenTopics] = useState({})
-    const [database, setData] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [btnLoader, setBtnLoader] = useState(false)
     const [numQuestions, setNumQuestions] = useState(5);
     const [numVariations, setNumVariations] = useState(3);
     const [pdfUrls, setPdfUrls] = useState([]);
     const [answersUrl, setAnswersUrl] = useState(null);
+    const [zagolovokText, setZagolovokText] = useState("")
     const {toast} = useToast()
-    const getData = async () => {
-        await fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
-            .then(res => res.json())
-            .then(data => {
-                setData(data)
-                console.log(data)
-                setLoading(false)
-            })
-    }
-    useEffect(() => {
-        getData()
-    }, [])
-    const getBase64FromUrl = async (url) => {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(blob);
+    const {isPending, error, data: database} = useQuery({
+        queryKey: ['test/getfulltestdb'],
+        queryFn: () =>
+            fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
+                .then((res) => res.json()),
+    })
+
+    const handleCheckboxChange = (value) => {
+        setSelectedSubtopics((prevCheckedValues) => {
+
+            if (prevCheckedValues.includes(value)) {
+                return prevCheckedValues.filter((val) => val !== value);
+            }
+            return [...prevCheckedValues, value];
         });
     };
 
-    const toggleTopic = (topicId) => {
-        setOpenTopics((prev) => ({
-            ...prev,
-            [topicId]: !prev[topicId],
-        }))
-    }
-    const handleCheckboxChange = (value) => {
-        setSelectedSubtopics((prevCheckedValues) => {
-            // If the checkbox is checked, add its value to the array
-            if (prevCheckedValues.includes(value)) {
-                return prevCheckedValues.filter((val) => val !== value); // Remove it if unchecked
-            }
-            return [...prevCheckedValues, value]; // Add it if checked
-        });
-    };
     const shuffleOptions = (options) => {
         const entries = Object.entries(options);
         const shuffledEntries = entries.sort(() => Math.random() - 0.5);
         return Object.fromEntries(shuffledEntries);
     };
 
-    const handleGeneratePDFs = () => {
+    const handleGenerateWordDocs = async () => {
+        setBtnLoader(true)
+
+        const {generateTestWordDocs, generateAnswersWord} = await import("../../hooks/test-word-generation.js")
         let selectedQuestions = [];
 
         selectedSubtopics.forEach((subtopic) => {
@@ -78,6 +82,7 @@ function TestToPdf(props) {
                 title: "Tanlangan mavzulardagi savollar yetmaydi.",
                 variant: "destructive",
             });
+            setBtnLoader(false)
             return;
         }
 
@@ -86,282 +91,25 @@ function TestToPdf(props) {
             let shuffledQuestions = [...selectedQuestions]
                 .sort(() => 0.5 - Math.random())
                 .slice(0, numQuestions)
-                .map(q => ({ ...q, options: shuffleOptions(q.options) }));
+                .map(q => ({...q, options: shuffleOptions(q.options)}));
 
             testVariations.push(shuffledQuestions);
         }
-
-        generateTestPDFs(testVariations);
-        generateAnswersPDF(testVariations);
+        generateTestWordDocs(testVariations, zagolovokText, setPdfUrls, setBtnLoader, setZagolovokText, encryptData);
+        generateAnswersWord(testVariations, setAnswersUrl, encryptData);
     };
 
 
-    // const generateTestPDFs = async (variations) => {
-    //     const urls = [];
-    //
-    //     for (const [index, questions] of variations.entries()) {
-    //         const doc = new jsPDF();
-    //         const margin = 10;
-    //         const pageWidth = doc.internal.pageSize.width - 2 * margin;
-    //         const pageHeight = doc.internal.pageSize.height - 20;
-    //         const columnWidth = (pageWidth / 2) - 5;
-    //         let yLeft = 40;
-    //         let yRight = 40;
-    //         let isLeftColumn = true;
-    //
-    //         doc.setFontSize(16);
-    //         doc.text(`Test Variant-${index + 1}`, margin, 10);
-    //         doc.setFontSize(12);
-    //         doc.text("F.I.SH: ______________________", margin, 20);
-    //         doc.text("Sinf: _______________________", margin + 110, 20);
-    //         doc.text("Sana: _______________________", margin, 28);
-    //
-    //         for (const [i, q] of questions.entries()) {
-    //             let x = isLeftColumn ? margin : margin + columnWidth + 10;
-    //             let y = isLeftColumn ? yLeft : yRight;
-    //
-    //             doc.setFontSize(14);
-    //             const questionText = `${i + 1}. ${q.questionText}`;
-    //             const questionLines = doc.splitTextToSize(questionText, columnWidth);
-    //             let questionHeight = questionLines.length * 7;
-    //
-    //             // Add question image if available
-    //             if (q.questionImage) {
-    //                 const imageBase64 = await getBase64FromUrl(q.questionImage);
-    //                 doc.addImage(imageBase64, "JPEG", x, y, 40, 40);
-    //                 y += 45; // Adjust spacing for the image
-    //             }
-    //
-    //             if (y + questionHeight > pageHeight) {
-    //                 doc.addPage();
-    //                 yLeft = 20;
-    //                 yRight = 20;
-    //                 isLeftColumn = true;
-    //                 x = margin;
-    //                 y = yLeft;
-    //             }
-    //
-    //             doc.text(questionLines, x, y);
-    //             y += questionHeight;
-    //
-    //             doc.setFontSize(12);
-    //             for (const [j, optionKey] of Object.keys(q.options).entries()) {
-    //                 const option = q.options[optionKey];
-    //                 const optionText = `${String.fromCharCode(65 + j)}) ${option.text}`;
-    //                 const optionLines = doc.splitTextToSize(optionText, columnWidth - 5);
-    //                 let optionHeight = optionLines.length * 6;
-    //
-    //                 // Add option image if available
-    //                 if (option.image) {
-    //                     const imageBase64 = await getBase64FromUrl(option.image);
-    //                     doc.addImage(imageBase64, "JPEG", x + 5, y, 30, 30);
-    //                     y += 35; // Adjust spacing for the image
-    //                 }
-    //
-    //                 if (y + optionHeight > pageHeight) {
-    //                     doc.addPage();
-    //                     yLeft = 20;
-    //                     yRight = 20;
-    //                     isLeftColumn = true;
-    //                     x = margin;
-    //                     y = yLeft;
-    //                 }
-    //
-    //                 doc.text(optionLines, x + 5, y);
-    //                 y += optionHeight + 4;
-    //             }
-    //
-    //             if (isLeftColumn) {
-    //                 yLeft = y + 10;
-    //             } else {
-    //                 yRight = y + 10;
-    //             }
-    //             isLeftColumn = !isLeftColumn;
-    //         }
-    //
-    //         const blob = doc.output("blob");
-    //         const url = URL.createObjectURL(blob);
-    //         urls.push({ url, name: `${index + 1}.pdf` });
-    //     }
-    //
-    //     setPdfUrls(urls);
-    // };
-
-    const generateTestPDFs = async (variations) => {
-        const urls = [];
-
-        for (const [index, questions] of variations.entries()) {
-            const doc = new jsPDF();
-            const margin = 10;
-            const pageWidth = doc.internal.pageSize.width - 2 * margin;
-            const pageHeight = doc.internal.pageSize.height - 20;
-            const columnWidth = (pageWidth / 2) - 5;
-            let yLeft = 40;
-            let yRight = 40;
-            let isLeftColumn = true;
-
-            doc.setFontSize(16);
-            doc.text(`Test Variant-${index + 1}`, margin, 10);
-            doc.setFontSize(12);
-            doc.text("F.I.SH: ______________________", margin, 20);
-            doc.text("Sinf: _______________________", margin + 110, 20);
-            doc.text("Sana: _______________________", margin, 28);
-
-            for (const [i, q] of questions.entries()) {
-                let x = isLeftColumn ? margin : margin + columnWidth + 10;
-                let y = isLeftColumn ? yLeft : yRight;
-
-                doc.setFontSize(14);
-                const questionText = `${i + 1}. ${q.questionText}`;
-                const questionLines = doc.splitTextToSize(questionText, columnWidth);
-                let questionHeight = questionLines.length * 7;
-
-                // Calculate space required for the question
-                let requiredHeight = questionHeight;
-
-                if (q.questionImage) {
-                    requiredHeight += 45; // Reserve space for the image
-                }
-
-                if (y + requiredHeight > pageHeight) {
-                    doc.addPage();
-                    yLeft = 20;
-                    yRight = 20;
-                    isLeftColumn = true;
-                    x = margin;
-                    y = yLeft;
-                }
-
-                if (q.questionImage) {
-                    const imageBase64 = await getBase64FromUrl(q.questionImage);
-                    doc.addImage(imageBase64, "JPEG", x, y, 40, 40);
-                    y += 45;
-                }
-
-                doc.text(questionLines, x, y);
-                y += questionHeight;
-
-                doc.setFontSize(12);
-                for (const [j, optionKey] of Object.keys(q.options).entries()) {
-                    const option = q.options[optionKey];
-                    const optionText = `${String.fromCharCode(65 + j)}) ${option.text}`;
-                    const optionLines = doc.splitTextToSize(optionText, columnWidth - 5);
-                    let optionHeight = optionLines.length * 6;
-                    let optionImageHeight = option.image ? 35 : 0;
-
-                    // Check if option fits, otherwise start a new page
-                    if (y + optionHeight + optionImageHeight > pageHeight) {
-                        doc.addPage();
-                        yLeft = 20;
-                        yRight = 20;
-                        isLeftColumn = true;
-                        x = margin;
-                        y = yLeft;
-                    }
-
-                    if (option.image) {
-                        const imageBase64 = await getBase64FromUrl(option.image);
-                        doc.addImage(imageBase64, "JPEG", x + 5, y, 30, 30);
-                        y += 35;
-                    }
-
-                    doc.text(optionLines, x + 5, y);
-                    y += optionHeight + 4;
-                }
-
-                if (isLeftColumn) {
-                    yLeft = y + 10;
-                } else {
-                    yRight = y + 10;
-                }
-                isLeftColumn = !isLeftColumn;
-            }
-
-            const blob = doc.output("blob");
-            const url = URL.createObjectURL(blob);
-            urls.push({ url, name: `${index + 1}.pdf` });
-        }
-
-        setPdfUrls(urls);
-    };
-
-
-    const generateAnswersPDF = async (variations) => {
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.width - 20; // Ensure margins
-        const pageHeight = doc.internal.pageSize.height - 20;
-        let y = 20; // Start below title
-
-        doc.setFontSize(18);
-        doc.text("Test Javoblari", 10, 10);
-        doc.setFontSize(14);
-
-        for (let index = 0; index < variations.length; index++) {
-            if (y + 10 > pageHeight) {
-                doc.addPage();
-                y = 20;
-            }
-
-            doc.text(`Test Variant-${index + 1}`, 10, y);
-            y += 10;
-
-            for (let i = 0; i < variations[index].length; i++) {
-                const q = variations[index][i];
-                const questionIndex = Object.keys(q.options).indexOf(q.answer);
-                const answerLetter = ["A", "B", "C", "D", "E"][questionIndex] || "?";
-                const answerText = `${i + 1}. (${answerLetter})`;
-                // const answerText = `${i + 1}. (${answerLetter}) ${q.options[q.answer].text}`;
-                const wrappedText = doc.splitTextToSize(answerText, pageWidth);
-
-                if (y + wrappedText.length * 7 > pageHeight) {
-                    doc.addPage();
-                    y = 20;
-                }
-
-                doc.text(wrappedText, 15, y);
-                y += wrappedText.length * 7 + 5; // Dynamic spacing
-
-                // Check if the answer has an image
-                // if (q.options[q.answer].image) {
-                //     const imageUrl = q.options[q.answer].image;
-                //     try {
-                //         const imgData = await getBase64FromUrl(imageUrl);
-                //         doc.addImage(imgData, "PNG", 15, y, 40, 40); // Adjust size as needed
-                //         y += 45;
-                //     } catch (error) {
-                //         console.error("Error loading image:", error);
-                //     }
-                // }
-            }
-
-            y += 10; // Extra space after each test variant
-        }
-
-        // Add page numbers
-        const totalPages = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-            doc.setPage(i);
-            doc.text(`Sahifa ${i}/${totalPages}`, 10, pageHeight + 5);
-        }
-
-        const blob = doc.output("blob");
-        const url = URL.createObjectURL(blob);
-        setAnswersUrl(url);
-    };
-
-
-    if (loading) {
+    if (isPending) {
         return (
-            <div className={`grid items-center justify-center m-auto`}>
-                <Loader2 className="mr-2 h-20 w-20 animate-spin"/>
-            </div>
+            <Loader variant={"big"}/>
         );
     }
 
     return (
         <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Test Generator</h1>
+                <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Test - Word</h1>
                 <Card className="bg-white shadow-lg rounded-lg overflow-hidden w-full">
                     <CardContent className="p-6">
                         <form className="space-y-6 w-full">
@@ -370,8 +118,10 @@ function TestToPdf(props) {
                                 <div className="w-full">
                                     <Accordion type="multiple" className="space-y-4 w-full">
                                         {database.map((topic) => (
-                                            <AccordionItem key={topic._id} value={topic._id} className="border rounded-lg overflow-hidden">
-                                                <AccordionTrigger className="px-4 py-3 bg-gray-50 hover:bg-gray-100 hover:no-underline">
+                                            <AccordionItem key={topic._id} value={topic._id}
+                                                           className="border rounded-lg overflow-hidden">
+                                                <AccordionTrigger
+                                                    className="px-4 py-3 bg-gray-50 hover:bg-gray-100 hover:no-underline">
                                                     {topic.maintopicname}
                                                 </AccordionTrigger>
                                                 <AccordionContent className="p-4 bg-white">
@@ -394,7 +144,7 @@ function TestToPdf(props) {
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <p className="text-sm text-gray-500">No subtopics available</p>
+                                                        <p className="text-sm text-gray-500">Mavzular topilmadi</p>
                                                     )}
                                                 </AccordionContent>
                                             </AccordionItem>
@@ -467,43 +217,64 @@ function TestToPdf(props) {
                                     </div>
                                 </div>
                             </div>
+                            <div>
+                                <Label htmlFor={`zagolovok`} className={`block text-sm font-medium text-gray-700`}>
+                                    Sarlavha Uchun
+                                </Label>
+                                <Input
+                                    type={"text"}
+                                    id={"zagolovok"}
+                                    value={zagolovokText}
+                                    onChange={e => setZagolovokText(e.target.value)}
+                                    className={`rounded`}
+                                />
+                            </div>
                             <Button
                                 type="button"
-                                onClick={handleGeneratePDFs}
+                                onClick={handleGenerateWordDocs}
                                 className="w-full"
-                                disabled={selectedSubtopics.length === 0}
+                                disabled={selectedSubtopics.length === 0 || btnLoader}
                             >
-                                Test Yaratish
+                                Test Yaratish (Word)
+
+                                {btnLoader && <Loader variant={`small`}/>}
                             </Button>
                         </form>
                     </CardContent>
                 </Card>
+
                 {pdfUrls.length > 0 && (
                     <div className="mt-8">
-                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Yaratilgan PDF lar</h2>
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Yaratilgan Word lar</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {pdfUrls.map((pdf, index) => (
+                            {pdfUrls.map((docx, index) => (
+
                                 <Card key={index}
-                                      className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
+                                    className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <CardContent className="p-4">
                                         <div className="flex items-center space-x-3">
                                             <FileText className="h-8 w-8 text-gray-700 flex-shrink-0"/>
                                             <div className="flex-1 min-w-0">
                                                 <div
-                                                    className="text-sm font-medium text-gray-900 truncate">{pdf.name}</div>
-                                                <p className="text-xs text-gray-500">PDF Document</p>
+                                                    className="text-sm font-medium text-gray-900 truncate">{docx.name}</div>
+                                                <p className="text-xs text-gray-500">Word Document</p>
                                             </div>
-
-                                            <a href={pdf.url} download={pdf.name} target="_blank"
-                                               rel="noopener noreferrer">
+                                            <a
+                                                key={index}
+                                                href={docx.url}
+                                                download={docx.name}
+                                                className="block"
+                                            >
                                                 <Button variant="ghost" className="flex-shrink-0 p-1">
-                                                    <Download className="h-4 w-4"/>
+                                                    <Download className="h-4 w-4 text-gray-700"/>
                                                 </Button>
                                             </a>
+
                                         </div>
                                     </CardContent>
                                 </Card>
                             ))}
+
                             {answersUrl && (
                                 <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <CardContent className="p-4">
@@ -513,20 +284,21 @@ function TestToPdf(props) {
                                                 <div className="text-sm font-medium text-gray-900 truncate">Test
                                                     Javoblari
                                                 </div>
-                                                <p className="text-xs text-gray-500">PDF Document</p>
+                                                <p className="text-xs text-gray-500">Word Document</p>
                                             </div>
-                                            <a href={answersUrl} download="Test_Javoblari.pdf" target="_blank" rel="noopener noreferrer">
-                                            <Button variant="ghost" className="flex-shrink-0 p-1">
-                                                <Download className="h-4 w-4"/>
-                                            </Button>
-                                        </a>
-                                    </div>
-                                </CardContent>
+                                            <a href={answersUrl} download="Test_Javoblari.docx" target="_blank"
+                                               rel="noopener noreferrer">
+                                                <Button variant="ghost" className="flex-shrink-0 p-1">
+                                                    <Download className="h-4 w-4"/>
+                                                </Button>
+                                            </a>
+                                        </div>
+                                    </CardContent>
                                 </Card>
-                                )}
+                            )}
                         </div>
                     </div>
-                    )}
+                )}
             </div>
         </div>
     );

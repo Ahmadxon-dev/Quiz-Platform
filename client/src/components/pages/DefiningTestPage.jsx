@@ -16,14 +16,15 @@ import {setTest} from "@/features/test/testSlice.js";
 import {Checkbox} from "@/components/ui/checkbox.jsx";
 import {Card} from "@/components/ui/card.jsx";
 import {useToast} from "@/hooks/use-toast.js";
+import {useQuery} from "@tanstack/react-query";
+import Loader from "@/components/ui/Loader.jsx";
 
 
-function DefiningTestPage(props) {
+function DefiningTestPage() {
     const [selectedMaintopic, setSelectedMaintopic] = useState('');
     const [selectedSubtopics, setSelectedSubtopics] = useState([]);
     const [loadingforBtn, setLoadingforBtn] = useState(false)
     const [topicsData, setTopicsData] = useState([])
-    const [loading, setLoading] = useState(true)
     const [numQuestions, setNumQuestions] = useState(0)
     const {toast} = useToast()
     const dispatch = useDispatch()
@@ -37,17 +38,17 @@ function DefiningTestPage(props) {
     selectedSubtopics.forEach(subtopic => {
         selectedSubTopicNames.push(subtopic.subtopicname)
     })
-    const getFullDb = async () => {
-        await fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
-            .then(res => res.json())
-            .then(data => {
-                setLoading(false)
-                setTopicsData(data)
-            })
-    }
+    const { isPending, error, data } = useQuery({
+        queryKey: ['test/getfulltestdb'],
+        queryFn: () =>
+            fetch(`${import.meta.env.VITE_SERVER}/test/getfulltestdb`)
+                .then((res) => res.json())
+    })
     useEffect(() => {
-        getFullDb()
-    }, [])
+        if (data) {
+            setTopicsData(data);
+        }
+    }, [data]);
     const handleInputChange = (e, unit) => {
         let value = e.target.value
         value = value.replace(/^0+/, "")
@@ -70,19 +71,19 @@ function DefiningTestPage(props) {
                 time: timeSeconds,
                 subtopicnamesArray: selectedSubTopicNames, //selected subtopic with questions,
                 userEmail: user.email,
-                numberOfQuestions:numQuestions,
-                userId:user._id
+                numberOfQuestions: numQuestions,
+                userId: user._id
             })
         })
             .then(res => res.json())
             .then(data => {
-                if (data.error){
+                if (data.error) {
                     setLoadingforBtn(false)
                     toast({
                         title: data.error,
                         variant: "destructive",
                         description: data.additional,
-                        duration:4000,
+                        duration: 4000,
                     })
                     return
                 }
@@ -95,11 +96,9 @@ function DefiningTestPage(props) {
         setSelectedSubtopics((prev) => (prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]))
     }
 
-    if (loading) {
+    if (isPending) {
         return (
-            <div className={`grid items-center justify-center m-auto`}>
-                <Loader2 className="mr-2 h-20 w-20 animate-spin"/>
-            </div>
+            <Loader variant={"big"} />
         )
     }
 
@@ -131,32 +130,32 @@ function DefiningTestPage(props) {
                             </Select>
                         </div>
 
-                        {selectedMaintopic &&  subtopics.length>0 ? (
-                            <div className="space-y-2">
-                                <Label>Mavzularni tanlang</Label>
-                                {
-                                    subtopics.map(subtopic => (
-                                        <div key={subtopic.subtopicname} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={subtopic.subtopicname}
-                                                checked={selectedSubtopics.includes(subtopic)}
-                                                onCheckedChange={() => handleItemToggle(subtopic)}
-                                            />
-                                            <label
-                                                htmlFor={subtopic.subtopicname}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                            >
-                                                {subtopic.subtopicname}
-                                            </label>
-                                        </div>
-                                    ))
-                                }
+                        {selectedMaintopic && subtopics.length > 0 ? (
+                                <div className="space-y-2">
+                                    <Label>Mavzularni tanlang</Label>
+                                    {
+                                        subtopics.map(subtopic => (
+                                            <div key={subtopic.subtopicname} className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={subtopic.subtopicname}
+                                                    checked={selectedSubtopics.includes(subtopic)}
+                                                    onCheckedChange={() => handleItemToggle(subtopic)}
+                                                />
+                                                <label
+                                                    htmlFor={subtopic.subtopicname}
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                    {subtopic.subtopicname}
+                                                </label>
+                                            </div>
+                                        ))
+                                    }
 
 
-                            </div>
-                        )
-                        :
-                        <Label>Bu bo'limda mavzular yo'q</Label>
+                                </div>
+                            )
+                            :
+                            <Label>Bu bo'limda mavzular yo'q</Label>
                         }
                         <div className="flex mx-auto justify-center mb-3">
                             <div className={`w-full`}>

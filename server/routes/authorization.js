@@ -65,8 +65,8 @@ router.post("/signin", async (req,res)=>{
         })
 })
 
-router.post("/getuser", async (req,res)=>{
-    const {token} = req.body
+router.get("/getuser/:token", async (req,res)=>{
+    const {token} = req.params
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     await Person.findById(decoded._id)
         .then(user=>{
